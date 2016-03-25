@@ -59,14 +59,35 @@ public class Grid : MonoBehaviour {
     }
 
     public Node NodeFromWorldPoint(Vector3 worldPosition) {   // figuring out the node that player is currently standing on // converts given world position into nodes
-        float percentX = (worldPosition.x + gridWorldSize.x/2) / gridWorldSize.x;       // how far along in the grid it is: far left = 0 center = .5 far right = 1
-        float percentY = (worldPosition.z + gridWorldSize.y/2) / gridWorldSize.y;
+        //float percentX = (worldPosition.x + gridWorldSize.x/2) / gridWorldSize.x;       // how far along in the grid it is: far left = 0 center = .5 far right = 1
+        //float percentY = (worldPosition.z + gridWorldSize.y/2) / gridWorldSize.y;
+        float percentX = (worldPosition.x) / gridWorldSize.x;
+        float percentY = (worldPosition.z) / gridWorldSize.y;
         percentX = Mathf.Clamp01(percentX);     // make sure that array index is valid
         percentY = Mathf.Clamp01(percentY);
 
         int x = Mathf.RoundToInt((gridSizeX - 1) * percentX);     // getting x and y indicies of the array
         int y = Mathf.RoundToInt((gridSizeY - 1) * percentY);
-
+        /*// make sure it is on walkable area
+        int i = 0;
+        while (!grid[x, y].walkable) {
+            switch (i) {
+                case 0: // increase x
+                    if (x + 1 < gridSizeX) x++;
+                    break;
+                case 1: // decrease x
+                    if (x - 1 >= 0) x--;
+                    break;
+                case 2: // increase y
+                    if (y + 1 < gridSizeY) y++;
+                    break;
+                case 3: // decrease y
+                    if (y - 1 >= 0) y--;
+                    break;
+            }
+            if (i == 4) break;
+            i++;
+        }*/
         return grid[x, y];
     }
 

@@ -209,7 +209,6 @@ public class GameController : MonoBehaviour
     }
     
     // ways to check item overlap
-
     void setupWave()
     {
         wave++;
@@ -267,7 +266,7 @@ public class GameController : MonoBehaviour
 
         uiController.displayItemCount();
         uiController.displayWave();
-        //generateRocks();
+        generateRocks();
         gridScript.CreateGrid();
         for (int i = 0; i < players.Count; i++) { // instantiating all items
             itemSpawn("player" + (1 + i));
@@ -306,7 +305,7 @@ public class GameController : MonoBehaviour
                 emptySpace thisSpace = emptyBlocks[randomLocation];
                 if (wallTiles[thisSpace.getXLocation(), thisSpace.getZLocation()] == 5)              // making sure that player doesn't overlap with rock
                 {
-                    wallTiles[thisSpace.getXLocation(), thisSpace.getZLocation()] = 8;
+                    //wallTiles[thisSpace.getXLocation(), thisSpace.getZLocation()] = 8;
                     players[i] = (GameObject)Instantiate(players[i], new Vector3(thisSpace.getXLocation(), 0.5f, thisSpace.getZLocation()), Quaternion.identity);
                     playerPlaced = true;
                 }
@@ -348,47 +347,43 @@ public class GameController : MonoBehaviour
     
     public void itemSpawn(string playerInfo)                                 // spawn an item on to the game world !!!!!!!!!!!!!!!! USE CHECKPLAYEROVERLAP FUNCTION
     {
-        float randx = Random.Range(1, 13f);
-        float randz = Random.Range(1, 13f);
+        int randomLocation = Mathf.FloorToInt(Random.Range(1, emptyBlocks.Count - 0.0001f));
+        emptySpace thisSpace = emptyBlocks[randomLocation];
         bool isGoodLocation = false;
         while (!isGoodLocation)                     // make sure not to over lap item with a rock
         {
-            isGoodLocation = true;                  // so far the position is assumed to be good
-            for (int i = 0; i < rocks.Count; i++){
-                if (dist(rocks[i].transform.position.x, randx, rocks[i].transform.position.z, randz) < 1.2f){    // if an item is too close to a rock then exit
-                    isGoodLocation = false;
-                    break;
-                }
-            }
-            if (isGoodLocation){                                        // if the position is still good
-                for (int q = 0; q < players.Count; q++) {              // make sure to keep certain distance from the players
-                    if (dist(players[q].transform.position.x, randx, players[q].transform.position.z, randz) < 5.2f){               ////////// this is giving me a trouble
-                        isGoodLocation = false;
-                        break;
+            isGoodLocation = true;                  // assume that the location is good so far
+            randomLocation = Mathf.FloorToInt(Random.Range(1, emptyBlocks.Count - 0.0001f));
+            thisSpace = emptyBlocks[randomLocation];
+            if (wallTiles[thisSpace.getXLocation(), thisSpace.getZLocation()] == 5)    // making sure that player doesn't overlap with rock
+            {
+                for (int q = 0; q < players.Count; q++) { 
+                    if(players[q].tag == playerInfo) {
+                        if (dist(players[q].transform.position.x, thisSpace.getXLocation(), players[q].transform.position.z, thisSpace.getZLocation()) < 5.2f) {
+                            isGoodLocation = false; // too close to a player
+                            break;
+                        }
                     }
                 }
+
             }
-            if(!isGoodLocation)                                      // if the position is no good, try again with different position
-            {
-                randx = Random.Range(1, 13f);
-                randz = Random.Range(1, 13f);
-            }
-        }
+         }
 
             if (playerInfo == "player1") {
-                GameObject temp = (GameObject)Instantiate(pickUps[0], new Vector3(randx, 0.5f, randz), Quaternion.identity);
+                GameObject temp = (GameObject)Instantiate(pickUps[0], new Vector3(thisSpace.getXLocation(), 0.5f, thisSpace.getZLocation()), Quaternion.identity);
                 items.Add(playerInfo + "pickUp", temp);                 // instantiates an item
             }
             else if (playerInfo == "player2") {
-                GameObject temp = (GameObject)Instantiate(pickUps[1], new Vector3(randx, 0.5f, randz), Quaternion.identity);
+                GameObject temp = (GameObject)Instantiate(pickUps[1], new Vector3(thisSpace.getXLocation(), 0.5f, thisSpace.getZLocation()), Quaternion.identity);
                 players[1].GetComponent<Unit>().target = temp.transform;
                 items.Add(playerInfo + "pickUp", temp);                 // instantiates an item
-            }
+                //players[1].GetComponent<Unit>().makePathRequest();
+        }
             else if (playerInfo == "player3") {
-                items.Add(playerInfo + "pickUp", (GameObject)Instantiate(pickUps[2], new Vector3(randx, 0.5f, randz), Quaternion.identity));                 // instantiates an item
+                items.Add(playerInfo + "pickUp", (GameObject)Instantiate(pickUps[2], new Vector3(thisSpace.getXLocation(), 0.5f, thisSpace.getZLocation()), Quaternion.identity));                 // instantiates an item
             }
             else if (playerInfo == "player4") {
-                items.Add(playerInfo + "pickUp", (GameObject)Instantiate(pickUps[3], new Vector3(randx, 0.5f, randz), Quaternion.identity));                 // instantiates an item
+                items.Add(playerInfo + "pickUp", (GameObject)Instantiate(pickUps[3], new Vector3(thisSpace.getXLocation(), 0.5f, thisSpace.getZLocation()), Quaternion.identity));                 // instantiates an item
             }
         }
 
