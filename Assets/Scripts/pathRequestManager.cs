@@ -21,7 +21,6 @@ public class pathRequestManager : MonoBehaviour {
 
     /* spreading out requests into number of frames */
     public static void RequestPath(Vector3 pathStart, Vector3 pathEnd, Action<Vector3[], bool> callback) {
-        Debug.Log("inside of RequestPath");
         PathRequest newRequest = new PathRequest(pathStart, pathEnd, callback);
         instance.pathRequestQueue.Enqueue(newRequest);
         instance.TryProcessNext();
@@ -31,7 +30,6 @@ public class pathRequestManager : MonoBehaviour {
        if not, ask the pathfinding script to process the next one*/
     void TryProcessNext() {
         if (!isProcessingPath && pathRequestQueue.Count > 0) {   // if not processing and the queue is not empty
-            Debug.Log("inside of TryProcessNext");
             currentPathRequest = pathRequestQueue.Dequeue();     // gets a request from the queue
             isProcessingPath = true;
             pathfinding.StartFindPath(currentPathRequest.pathStart, currentPathRequest.pathEnd);

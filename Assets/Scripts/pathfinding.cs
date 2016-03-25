@@ -15,22 +15,21 @@ public class pathfinding : MonoBehaviour {
     }
     
     public void StartFindPath(Vector3 startPos, Vector3 targetPos) {
-        UnityEngine.Debug.Log("inside of StartFindPath");
         StartCoroutine(FindPath(startPos, targetPos));
     }
 
 	IEnumerator FindPath(Vector3 startPos, Vector3 targetPos) {
-        
         Stopwatch sw = new Stopwatch();
         sw.Start();                         //  starts the stopwatch of efficientcy check
-        UnityEngine.Debug.Log("starting StopWatch");
-        UnityEngine.Debug.Log("player 2: " + startPos);
-        UnityEngine.Debug.Log("item : " + targetPos);
         Vector3[] waypoints = new Vector3[0];
         bool pathSuccess = false;
+        UnityEngine.Debug.Log("starPos:  " + startPos.ToString());
+        UnityEngine.Debug.Log("targetPos: " + targetPos.ToString());
 
         Node startNode = grid.NodeFromWorldPoint(startPos);
         Node targetNode = grid.NodeFromWorldPoint(targetPos);
+        UnityEngine.Debug.Log("starNode:  " + startNode.walkable + ", " + startNode.worldPosition);
+        UnityEngine.Debug.Log("targetNode: " + targetNode.walkable + ", " + targetNode.worldPosition);
 
         if (startNode.walkable && targetNode.walkable) {    // only find path if both start and end is walkable
             Heap<Node> openSet = new Heap<Node>(grid.MaxSize);
@@ -38,6 +37,7 @@ public class pathfinding : MonoBehaviour {
             openSet.Add(startNode);
 
             while (openSet.Count > 0) {
+                UnityEngine.Debug.Log("HERE");
                 Node currentNode = openSet.RemoveFirst();
                 // if a node in the openset has lower fcost then it becomes the current node
                 // if a node in the openset = current node, then compare h cost to see who is closer to the end node

@@ -12,17 +12,13 @@ public class Unit : MonoBehaviour {
     }
 
     public void makePathRequest() {
-        Debug.Log("in makePathRequest");
-        Debug.Log("player 2: " + transform.position);
-        Debug.Log("item : " + target.position);
         pathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
     }
 
     public void OnPathFound(Vector3[] newPath, bool pathSuccessful) {
-        Debug.Log("pathSuccessful: "+ pathSuccessful);
+        Debug.Log(pathSuccessful);
         if (pathSuccessful) {
             path = newPath;
-            Debug.Log("target position: " + target.position);
             StopCoroutine("FollowPath");
             StartCoroutine("FollowPath");
         }

@@ -267,13 +267,11 @@ public class GameController : MonoBehaviour
 
         uiController.displayItemCount();
         uiController.displayWave();
-        generateRocks();
+        //generateRocks();
         gridScript.CreateGrid();
         for (int i = 0; i < players.Count; i++) { // instantiating all items
             itemSpawn("player" + (1 + i));
             if (i > 0) {
-                Debug.Log("i = " + i);
-                Debug.Log(players[i].transform.position);
                 players[i].GetComponent<Unit>().makePathRequest();
             }
         }
@@ -309,7 +307,7 @@ public class GameController : MonoBehaviour
                 if (wallTiles[thisSpace.getXLocation(), thisSpace.getZLocation()] == 5)              // making sure that player doesn't overlap with rock
                 {
                     wallTiles[thisSpace.getXLocation(), thisSpace.getZLocation()] = 8;
-                    Instantiate(players[i], new Vector3(thisSpace.getXLocation(), 0.5f, thisSpace.getZLocation()), Quaternion.identity);
+                    players[i] = (GameObject)Instantiate(players[i], new Vector3(thisSpace.getXLocation(), 0.5f, thisSpace.getZLocation()), Quaternion.identity);
                     playerPlaced = true;
                 }
             }
@@ -378,12 +376,13 @@ public class GameController : MonoBehaviour
         }
 
             if (playerInfo == "player1") {
-                items.Add(playerInfo + "pickUp", (GameObject)Instantiate(pickUps[0], new Vector3(randx, 0.5f, randz), Quaternion.identity));                 // instantiates an item
+                GameObject temp = (GameObject)Instantiate(pickUps[0], new Vector3(randx, 0.5f, randz), Quaternion.identity);
+                items.Add(playerInfo + "pickUp", temp);                 // instantiates an item
             }
             else if (playerInfo == "player2") {
-            GameObject temp = (GameObject)Instantiate(pickUps[1], new Vector3(randx, 0.5f, randz), Quaternion.identity);
-                items.Add(playerInfo + "pickUp", temp);                 // instantiates an item
+                GameObject temp = (GameObject)Instantiate(pickUps[1], new Vector3(randx, 0.5f, randz), Quaternion.identity);
                 players[1].GetComponent<Unit>().target = temp.transform;
+                items.Add(playerInfo + "pickUp", temp);                 // instantiates an item
             }
             else if (playerInfo == "player3") {
                 items.Add(playerInfo + "pickUp", (GameObject)Instantiate(pickUps[2], new Vector3(randx, 0.5f, randz), Quaternion.identity));                 // instantiates an item
