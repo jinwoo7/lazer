@@ -26,10 +26,11 @@ public class PlayersBase : MonoBehaviour {
         if (other.gameObject.CompareTag(gameObject.tag+"pickUp"))               // picking up items
         {
             itemSound.Play(0);                                  // playing item pickup sound
-            gameController.removeItem(other.tag);                 // destroys an item
+            //gameController.removeItem(other.tag);                 // destroys an item
             gameController.itemCount(other.tag);
             uiController.displayItemCount();
-            gameController.itemSpawn(gameObject.tag);                         // respawn an item
+            //gameController.itemSpawn(gameObject.tag);                         // respawn an item
+            gameController.moveItem(other.tag);
         }
         if (other.gameObject.CompareTag("Laser"))               // picking up items
         {

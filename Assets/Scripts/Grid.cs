@@ -8,16 +8,17 @@ public class Grid : MonoBehaviour {
     public LayerMask unwalkableMask;
     public Vector2 gridWorldSize;
     public float nodeRadius;
-    Node[,] grid;
+    public Node[,] grid;
 
     float nodeDiameter;
-    int gridSizeX, gridSizeY;
+    public int gridSizeX, gridSizeY;
 
     void Awake(){   // Awake to generate the map before the Unit's Start method
         nodeDiameter = nodeRadius * 2;
         gridSizeX = Mathf.RoundToInt(gridWorldSize.x / nodeDiameter);
         gridSizeY = Mathf.RoundToInt(gridWorldSize.y / nodeDiameter);
         CreateGrid();
+        UnityEngine.Debug.Log("grid: " + gridSizeX + ", " + gridSizeY);
     }
 
     public int MaxSize {
@@ -59,6 +60,7 @@ public class Grid : MonoBehaviour {
     }
 
     public Node NodeFromWorldPoint(Vector3 worldPosition) {   // figuring out the node that player is currently standing on // converts given world position into nodes
+        /*
         //float percentX = (worldPosition.x + gridWorldSize.x/2) / gridWorldSize.x;       // how far along in the grid it is: far left = 0 center = .5 far right = 1
         //float percentY = (worldPosition.z + gridWorldSize.y/2) / gridWorldSize.y;
         float percentX = (worldPosition.x) / gridWorldSize.x;
@@ -68,7 +70,7 @@ public class Grid : MonoBehaviour {
 
         int x = Mathf.RoundToInt((gridSizeX - 1) * percentX);     // getting x and y indicies of the array
         int y = Mathf.RoundToInt((gridSizeY - 1) * percentY);
-        /*// make sure it is on walkable area
+        // make sure it is on walkable area
         int i = 0;
         while (!grid[x, y].walkable) {
             switch (i) {
@@ -87,7 +89,13 @@ public class Grid : MonoBehaviour {
             }
             if (i == 4) break;
             i++;
-        }*/
+        }
+        */
+        Vector3 worldBottomLeft = transform.position - Vector3.right * gridWorldSize.x / 2 - Vector3.forward * gridWorldSize.y / 2;
+
+        int x = (int)Mathf.Round((worldPosition.x - worldBottomLeft.x - nodeRadius) / nodeDiameter);
+        int y = (int)Mathf.Round((worldPosition.z - worldBottomLeft.z - nodeRadius) / nodeDiameter);
+
         return grid[x, y];
     }
 
