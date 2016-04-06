@@ -66,7 +66,6 @@ public class GameController : MonoBehaviour {
                     setupWave();
                     uiController.startText.text = "";
                     setGameStart(true);
-                    //showList();                                                    // debugging line
                     setCurrentState(GameState.Playing);
                 }
                 break;
@@ -199,8 +198,8 @@ public class GameController : MonoBehaviour {
         wave++;
         if (wave < 3) {
             maxRockNum = 40;
-            itemGoal = 15;
-            setTimeLimit(10.0f); // 30 f
+            itemGoal = 7;
+            setTimeLimit(30.0f); // 30 f
             groupingMax = 5;
             timeBetweenLasers = 4.0f;                   // duration between the lasers
             warningTime = 3.0f;
@@ -208,9 +207,9 @@ public class GameController : MonoBehaviour {
         }
         else if (wave < 5) {
             maxRockNum = 35;
-            itemGoal = 10;
+            itemGoal = 8;
             groupingMax = 3;
-            setTimeLimit(60.0f);
+            setTimeLimit(30.0f);
             timeBetweenLasers = 4.0f;                   // duration between the lasers
             warningTime = 3.0f;
             numOfLasers = 8;                            // number of lasers to be fired at a time

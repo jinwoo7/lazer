@@ -48,8 +48,7 @@ public class UIController : MonoBehaviour {
 
     public void displayGameOver()
     {
-        gameOverDisplay.text = "GameOver";
-        gameOverDisplay.fontStyle = FontStyle.Bold;
+        gameOverDisplay.text = "Game Over";
         gameOverDisplay.color = Color.red;
     }
 
