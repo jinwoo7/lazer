@@ -1,12 +1,19 @@
 ﻿using UnityEngine;
+using UnityEngine.UI; // contains all classes for UI elements
 using System.Collections;
 using System.Collections.Generic;           // for using list
 
 public class GameController : MonoBehaviour {
+
+    public Canvas pauseScreen;
+    public Canvas gameOverScreen;
+    public Canvas succesScreen;
     public TileType[] tileTypes;
-    public GameObject[] pickUps;
+    public GameObject pickUp;   // use this instead
+    public GameObject[] pickUps;//  dont use this anymore
     public GameObject rock;
     public List<GameObject> players = new List<GameObject>(2);
+    public bool playerMovement;
 
     struct emptySpace {
         public emptySpace(int x, int z) { xLocation = x; zLocation = z; }
@@ -36,23 +43,33 @@ public class GameController : MonoBehaviour {
     private GameObject[] wall;                                  // array of walls in the game
     private List<GameObject> rocks = new List<GameObject>();    // array of rocks in the game
     private List<emptySpace> emptyBlocks = new List<emptySpace>();
-    private Dictionary<string, GameObject> items = new Dictionary<string, GameObject>();
+    private Dictionary<string, GameObject> items = new Dictionary<string, GameObject>(); // get rid of this
+    private GameObject item;                                                             // use this instead
     private bool gameStart = false;
-
+    private bool levelSetup;
     private UIController uiController;
     private Grid gridScript;
-    public enum GameState { Transition, Playing, Gameover }
-    GameState currentState;
+    public enum GameState { Transition, Playing, Success, Gameover }
+    private GameState currentState;
 
     int[,] wallTiles;       // 0:NorthWall 1: SouthWall 2:EastWall 3:WestWall 
                             // 4: coner Rock == rock 5: Nothing 6: Rocks 7:item 8:player 9: (used for rockchecking)
 
     // Use this for initialization
     void Start() {
+        pauseScreen = pauseScreen.GetComponent<Canvas>();
+        gameOverScreen = gameOverScreen.GetComponent<Canvas>();
+        succesScreen = succesScreen.GetComponent<Canvas>();
+        pauseScreen.enabled = true;
+        gameOverScreen.enabled = false;
+        succesScreen.enabled = false;
+        playerMovement = false;
+        levelSetup = true;
+
         gridScript = GetComponent<Grid>();
         uiController = GetComponent<UIController>();
         wave = 0;
-        uiController.setStartText("");
+        //uiController.setStartText("");
         generateAllTiles();
         generateWallTileVisual();
         generatePlayer();                           // creates player (always do this after generating rocks)
@@ -62,14 +79,21 @@ public class GameController : MonoBehaviour {
     void Update() {
         switch (currentState) {
             case GameState.Transition:
-                if (Input.GetKeyDown(KeyCode.Space)) {
+                if (levelSetup) {
                     setupWave();
-                    uiController.startText.text = "";
+                    levelSetup = false;
+                }
+                playerMovement = false;
+                if (Input.GetKeyDown(KeyCode.Space)) {
+                    pauseScreen.enabled = false;
                     setGameStart(true);
-                    setCurrentState(GameState.Playing);
+                    setCurrentState(GameState.Playing); // change this to countdown state when I have time
                 }
                 break;
             case GameState.Playing:
+                if (!playerMovement) {
+                    playerMovement = true;                                            // allowing players to move
+                }
                 gameTimer -= Time.deltaTime;                                          // count down the game time
                 lazertimer += Time.deltaTime;
                 if (gameTimer <= 0f)                                                  // round over
@@ -77,8 +101,8 @@ public class GameController : MonoBehaviour {
                     destoryAllRocks();                                                   // reseting for next round
                     lazertimer = 0;
                     gameTimer = getTimeLimit();
-                    uiController.setStartText("Press Spacebar to start the next wave!");
-                    setCurrentState(GameState.Transition);
+                    succesScreen.enabled = true;
+                    setCurrentState(GameState.Success);
                 }
                 uiController.displayTime(gameTimer);                                                      // displays time
                 if (lazertimer > timeBetweenLasers && gameStart)                                   // 4 seconds between the lasers
@@ -87,8 +111,18 @@ public class GameController : MonoBehaviour {
                     generateLasers(numOfLasers);
                 }
                 break;
+            case GameState.Success:
+                playerMovement = false;
+                if (Input.GetKeyDown(KeyCode.Space)) {
+                    succesScreen.enabled = false;
+                    pauseScreen.enabled = true;
+                    levelSetup = true;
+                    setCurrentState(GameState.Transition);
+                }
+                break;
             case GameState.Gameover:
-
+                gameOverScreen.enabled = true;
+                playerMovement = false;
                 break;
         }
     }
@@ -331,9 +365,6 @@ public class GameController : MonoBehaviour {
 
     public void itemSpawn(string playerInfo)                // spawn an item on to the game world !!!!!!!!!!!!!!!! USE CHECKPLAYEROVERLAP FUNCTION
     {
-        //int randomLocation = Mathf.FloorToInt(Random.Range(1, emptyBlocks.Count - 0.0001f));
-        //emptySpace thisSpace = emptyBlocks[randomLocation];
-
         int randX = Random.Range(0, gridScript.gridSizeX);
         int randY = Random.Range(0, gridScript.gridSizeY);
         Vector3 randLocation = Vector3.zero;
@@ -365,7 +396,10 @@ public class GameController : MonoBehaviour {
                 }
             }
         }
-
+        //GameObject temp = (GameObject)Instantiate(pickUp, new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity);
+        //players[1].GetComponent<Unit>().target = temp.transform;
+        //item = temp;
+        ///*
         if (playerInfo == "player1") {
             //GameObject temp = (GameObject)Instantiate(pickUps[0], new Vector3(thisSpace.getXLocation(), 0.5f, thisSpace.getZLocation()), Quaternion.identity);
             GameObject temp = (GameObject)Instantiate(pickUps[0], new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity);
@@ -385,10 +419,11 @@ public class GameController : MonoBehaviour {
         else if (playerInfo == "player4") {
             //items.Add(playerInfo + "pickUp", (GameObject)Instantiate(pickUps[3], new Vector3(thisSpace.getXLocation(), 0.5f, thisSpace.getZLocation()), Quaternion.identity));                 // instantiates an item
             items.Add(playerInfo + "pickUp", (GameObject)Instantiate(pickUps[3], new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity));                 // instantiates an item
-        }
+        }//*/
     }
 
     public void removeItem(string itemTag) {    // not using in PlayerBase anymore
+        ///*
         GameObject temp = null;
         if (items.TryGetValue(itemTag, out temp)) {
             Destroy(temp);
@@ -396,9 +431,12 @@ public class GameController : MonoBehaviour {
         }
         else
             Debug.Log("ERROR - COULD NOT FIND " + itemTag);
+        //*/
+        //Destroy(pickUp);
     }
 
     public void moveItem(string itemTag) {
+        ///*
         Debug.Log("item moving!");
         GameObject temp = null;
         if (items.TryGetValue(itemTag, out temp)) {
@@ -428,7 +466,26 @@ public class GameController : MonoBehaviour {
         }
         else {
             Debug.Log("Could not find this item to move");
-        }
+        }//*/
+        /*int randX = Random.Range(0, gridScript.gridSizeX);
+        int randZ = Random.Range(0, gridScript.gridSizeY);
+        Vector3 randLocation = Vector3.zero;
+
+        bool isGoodLocation = false;
+        while (!isGoodLocation) {                     // make sure not to over lap item with a rock
+            isGoodLocation = true;                  // assume that the location is good so far
+
+            randLocation = gridScript.grid[randX, randZ].worldPosition;
+            // making sure that player doesn't overlap with rock
+            while (!gridScript.grid[randX, randZ].walkable || !checkPositionWithPlayers(randLocation.x, randLocation.z, 3.0f)) {
+                randX = Random.Range(0, gridScript.gridSizeX);
+                randZ = Random.Range(0, gridScript.gridSizeY);
+                randLocation = gridScript.grid[randX, randZ].worldPosition;
+            }
+
+            pickUp.transform.position = new Vector3(randLocation.x, 0.5f, randLocation.z);
+            players[1].GetComponent<Unit>().makePathRequest();
+        }*/
     }
 
     float dist(float ax, float bx, float az, float bz)      // calculates the distance between two points
@@ -649,6 +706,9 @@ public class GameController : MonoBehaviour {
     }
 
     //getters
+    public GameState getCurrentState() {
+        return currentState;
+    }
     public int getItemGoal() {
         return itemGoal;
     }
@@ -672,5 +732,10 @@ public class GameController : MonoBehaviour {
 
     bool getGameStart() {
         return gameStart;
+    }
+
+    // buttons
+    public void HomePress() {
+        Application.LoadLevel(1);
     }
 }

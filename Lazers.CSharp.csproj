@@ -79,6 +79,8 @@
     <Compile Include="Assets\Scripts\UIController.cs" />
     <Compile Include="Assets\Scripts\Unit.cs" />
     <Compile Include="Assets\Scripts\WallScript.cs" />
+    <Compile Include="Assets\Scripts\inGameButtons.cs" />
+    <Compile Include="Assets\Scripts\levelSelect.cs" />
     <Compile Include="Assets\Scripts\menuScript.cs" />
     <Compile Include="Assets\Scripts\pathRequestManager.cs" />
     <Compile Include="Assets\Scripts\pathfinding.cs" />

@@ -4,7 +4,7 @@ using System.Collections;
 
 public class UIController : MonoBehaviour {
 
-    public Text startText;
+    //public Text startText;
     public Text timerDisplay;
     public Text levelDisplay;
     public Text itemDisplay;
@@ -14,8 +14,8 @@ public class UIController : MonoBehaviour {
     // Use this for initialization
     void Start () {
         gameController = GetComponent<GameController>();
-        gameOverDisplay.text = "";
-        startText.text = "Press Spacebar to start!";
+        //gameOverDisplay.text = "";
+        //startText.text = "Press Spacebar to start!";
     }
 	
 	// Update is called once per frame
@@ -46,15 +46,15 @@ public class UIController : MonoBehaviour {
         timerDisplay.text = timeStr;
     }
 
-    public void displayGameOver()
+    /*public void displayGameOver()
     {
         gameOverDisplay.text = "Game Over";
         gameOverDisplay.color = Color.red;
-    }
+    }*/
 
-    public void setStartText(string s)
+   /* public void setStartText(string s)
     {
         startText.text = s;
-    }
+    }*/
 
 }
