@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI; // contains all classes for UI elements
 using System.Collections;
 using System.Collections.Generic;           // for using list
@@ -8,11 +9,12 @@ public class GameController : MonoBehaviour {
     public Canvas pauseScreen;
     public Canvas gameOverScreen;
     public Canvas succesScreen;
+    public Canvas endScreen;
     public TileType[] tileTypes;
+    public GameObject[] playerPrefabs;
     public GameObject pickUp;   // use this instead
-    public GameObject[] pickUps;//  dont use this anymore
     public GameObject rock;
-    public List<GameObject> players = new List<GameObject>(2);
+    public List<GameObject> players = new List<GameObject>(3);
     public bool playerMovement;
 
     struct emptySpace {
@@ -32,7 +34,6 @@ public class GameController : MonoBehaviour {
     private int itemGoal;
     private int groupingMax;
     private float timeLimit;
-    private int wave;
     private float timeBetweenLasers;                // duration between the lasers
     private float warningTime;
     private float lazertimer = 0.0f;
@@ -40,16 +41,17 @@ public class GameController : MonoBehaviour {
     private int numOfLasers;
     private int mapSizeX = 13;
     private int mapSizeZ = 13;
+    private int[] scores = new int[4];
     private GameObject[] wall;                                  // array of walls in the game
     private List<GameObject> rocks = new List<GameObject>();    // array of rocks in the game
     private List<emptySpace> emptyBlocks = new List<emptySpace>();
-    private Dictionary<string, GameObject> items = new Dictionary<string, GameObject>(); // get rid of this
-    private GameObject item;                                                             // use this instead
+    private GameObject item;
     private bool gameStart = false;
     private bool levelSetup;
     private UIController uiController;
     private Grid gridScript;
-    public enum GameState { Transition, Playing, Success, Gameover }
+    private memoryScript lvlMemory;
+    public enum GameState { Transition, Playing, Success, Gameover, EndLevel }
     private GameState currentState;
 
     int[,] wallTiles;       // 0:NorthWall 1: SouthWall 2:EastWall 3:WestWall 
@@ -60,33 +62,39 @@ public class GameController : MonoBehaviour {
         pauseScreen = pauseScreen.GetComponent<Canvas>();
         gameOverScreen = gameOverScreen.GetComponent<Canvas>();
         succesScreen = succesScreen.GetComponent<Canvas>();
+        endScreen = endScreen.GetComponent<Canvas>();
         pauseScreen.enabled = true;
         gameOverScreen.enabled = false;
         succesScreen.enabled = false;
+        endScreen.enabled = false;
         playerMovement = false;
         levelSetup = true;
 
+        lvlMemory = GameObject.FindGameObjectWithTag("Memory").GetComponent<memoryScript>();
         gridScript = GetComponent<Grid>();
         uiController = GetComponent<UIController>();
-        wave = 0;
-        //uiController.setStartText("");
         generateAllTiles();
         generateWallTileVisual();
         generatePlayer();                           // creates player (always do this after generating rocks)
         setCurrentState(GameState.Transition);
+        uiController.displayEpisode();
     }
 
     void Update() {
         switch (currentState) {
             case GameState.Transition:
                 if (levelSetup) {
-                    setupWave();
+                    setupLevel();
                     levelSetup = false;
+                    generatePlayer();
+                    itemSpawn();
+                    uiController.displayEpisode();
                 }
                 playerMovement = false;
                 if (Input.GetKeyDown(KeyCode.Space)) {
                     pauseScreen.enabled = false;
                     setGameStart(true);
+                    AIPathRequests();
                     setCurrentState(GameState.Playing); // change this to countdown state when I have time
                 }
                 break;
@@ -97,12 +105,15 @@ public class GameController : MonoBehaviour {
                 gameTimer -= Time.deltaTime;                                          // count down the game time
                 lazertimer += Time.deltaTime;
                 if (gameTimer <= 0f)                                                  // round over
-                {
-                    destoryAllRocks();                                                   // reseting for next round
+                {                                                                    // reseting for next round
                     lazertimer = 0;
                     gameTimer = getTimeLimit();
                     succesScreen.enabled = true;
-                    setCurrentState(GameState.Success);
+                    AIPathStop();
+                    if (lvlMemory.getCurrentLvl() != 6)
+                        setCurrentState(GameState.Success);
+                    else
+                        setCurrentState(GameState.EndLevel);
                 }
                 uiController.displayTime(gameTimer);                                                      // displays time
                 if (lazertimer > timeBetweenLasers && gameStart)                                   // 4 seconds between the lasers
@@ -114,15 +125,44 @@ public class GameController : MonoBehaviour {
             case GameState.Success:
                 playerMovement = false;
                 if (Input.GetKeyDown(KeyCode.Space)) {
+                    destoryAllRocks();
                     succesScreen.enabled = false;
                     pauseScreen.enabled = true;
                     levelSetup = true;
+                    lvlMemory.setCurrentLvl(lvlMemory.getCurrentLvl() + 1);
                     setCurrentState(GameState.Transition);
                 }
                 break;
             case GameState.Gameover:
                 gameOverScreen.enabled = true;
                 playerMovement = false;
+                if (Input.GetKeyDown(KeyCode.Space)) {
+                    destoryAllRocks();
+                    gameOverScreen.enabled = false;
+                    pauseScreen.enabled = true;
+                    levelSetup = true;
+                    setCurrentState(GameState.Transition);
+                }
+                break;
+            case GameState.EndLevel:
+                if (Input.GetKeyDown(KeyCode.Space)) {
+                    endScreen.enabled = false;
+                    lvlMemory.setCurrentLvl(1);
+                    switch (lvlMemory.getCurrentEpisode()) {
+                        case "episode1":
+                            SceneManager.LoadScene("episode2");
+                            break;
+                        case "episode2":
+                            SceneManager.LoadScene("episode3");
+                            break;
+                        case "episode3":
+                            SceneManager.LoadScene("levelSelection");
+                            break;
+                        default:
+                            SceneManager.LoadScene("levelSelection");
+                            break;
+                    }
+                }
                 break;
         }
     }
@@ -199,7 +239,7 @@ public class GameController : MonoBehaviour {
             int randomLocation = Mathf.FloorToInt(Random.Range(1, emptyBlocks.Count - 0.0001f));
             emptySpace thisSpace = emptyBlocks[randomLocation];
 
-            if (checkRockPlayerOverlapLgality(thisSpace.getXLocation(), thisSpace.getZLocation())) // checking to see if it overlaps with players AND if this is a empty spot                                                    // avoiding overlaps
+            if (checkPositionWithPlayers(thisSpace.getXLocation(), thisSpace.getZLocation(), .9f)) // checking to see if it overlaps with players AND if this is a empty spot                                                    // avoiding overlaps
             {
                 wallTiles[thisSpace.getXLocation(), thisSpace.getZLocation()] = 6;    // try putting the rock in this position
                 if (checksForLegalRockSpawn()) {        // check to see if it traps any space
@@ -219,73 +259,78 @@ public class GameController : MonoBehaviour {
         }
     }
 
-    bool checkRockPlayerOverlapLgality(int x, int z) {
-        for (int i = 0; i < players.Count; i++) {
-            if (dist(x, players[i].transform.position.x, z, players[i].transform.position.z) <= .9f)
-                return false;
-        }
-        return true;
-    }
-
     // ways to check item overlap
-    void setupWave() {
-        wave++;
-        if (wave < 3) {
+    void setupLevel() {
+        if (lvlMemory.getCurrentLvl() == 1) {
             maxRockNum = 40;
-            itemGoal = 7;
-            setTimeLimit(30.0f); // 30 f
+            itemGoal = 3;
+            setTimeLimit(5.0f); // 30 f
             groupingMax = 5;
             timeBetweenLasers = 4.0f;                   // duration between the lasers
             warningTime = 3.0f;
             numOfLasers = 5;                            // number of lasers to be fired at a time
+            Debug.Log("Loading Level 1");
         }
-        else if (wave < 5) {
+        else if (lvlMemory.getCurrentLvl() == 2) {
             maxRockNum = 35;
-            itemGoal = 8;
-            groupingMax = 3;
+            itemGoal = 6;
+            groupingMax = 5;
             setTimeLimit(30.0f);
             timeBetweenLasers = 4.0f;                   // duration between the lasers
             warningTime = 3.0f;
-            numOfLasers = 8;                            // number of lasers to be fired at a time
+            numOfLasers = 5;                            // number of lasers to be fired at a time
+            Debug.Log("Loading Level 2");
         }
-        else if (wave < 7) {
-            maxRockNum = 70;
-            itemGoal = 10;
+        else if (lvlMemory.getCurrentLvl() == 3) {
+            maxRockNum = 30;
+            itemGoal = 8;
             groupingMax = 3;
-            setTimeLimit(60.0f);
+            setTimeLimit(35.0f);
             timeBetweenLasers = 3.0f;                   // duration between the lasers
-            warningTime = 2.0f;
-            numOfLasers = 12;                            // number of lasers to be fired at a time
+            warningTime = 3.0f;
+            numOfLasers = 6;                            // number of lasers to be fired at a time
+            Debug.Log("Loading Level 3");
         }
-        else if (wave < 8) {
+        else if (lvlMemory.getCurrentLvl() == 4) {
+            maxRockNum = 30;
+            itemGoal = 10;
+            setTimeLimit(40.0f);
+            groupingMax = 3;
+            timeBetweenLasers = 3.0f;                   // duration between the lasers
+            warningTime = 3.0f;
+            numOfLasers = 7;                            // number of lasers to be fired at a time
+            Debug.Log("Loading Level 4");
+        }
+        else if (lvlMemory.getCurrentLvl() == 5) {
+            maxRockNum = 15;
+            itemGoal = 10;
+            setTimeLimit(30.0f);
+            groupingMax = 1;
+            timeBetweenLasers = 3.0f;                   // duration between the lasers
+            warningTime = 3.0f;
+            numOfLasers = 9;                            // number of lasers to be fired at a time
+            Debug.Log("Loading Level 5");
+        }
+        else if (lvlMemory.getCurrentLvl() == 6) {
             maxRockNum = 15;
             itemGoal = 15;
-            setTimeLimit(30.0f);
-            groupingMax = 2;
+            setTimeLimit(40.0f);
+            groupingMax = 1;
             timeBetweenLasers = 3.0f;                   // duration between the lasers
-            warningTime = 2.0f;
-            numOfLasers = 12;                            // number of lasers to be fired at a time
-        }
-        else if (wave < 10) {
-
-        }
-        else if (wave >= 12) {
-
+            warningTime = 3.0f;
+            numOfLasers = 11;                            // number of lasers to be fired at a time
+            Debug.Log("Loading Level 6");
         }
         gameTimer = getTimeLimit();
-        for (int i = 0; i < players.Count; i++) // resetting all item counter of all players
-            players[i].GetComponent<PlayersBase>().resetItemNum();
+        for (int i = 0; i < players.Count; i++) { // resetting all item counter of all players
+            if(players[i] != null)
+                handleScores(players[i].tag, "reset");
+        }
 
         uiController.displayItemCount();
         uiController.displayWave();
         generateRocks();
         gridScript.CreateGrid();
-        for (int i = 0; i < players.Count; i++) { // instantiating all items
-            itemSpawn("player" + (1 + i));
-            if (i > 0) {
-                players[i].GetComponent<Unit>().makePathRequest();
-            }
-        }
     }
 
     void destoryAllRocks() {
@@ -301,36 +346,28 @@ public class GameController : MonoBehaviour {
                 }
             }
         }
-        removeItem("player1pickUp");                       // removes player 1 pickup
-        removeItem("player2pickUp");                       // removes player 2 pickup
+        removeItem();                       // removes player 1 pickup
     }
 
     void generatePlayer()                                   // always call this after generateRocks
     {
         bool playerPlaced = false;
         for (int i = 0; i < players.Count; i++) {
-            while (!playerPlaced)                                                                    // placing a player in the game world
+            while (!playerPlaced && players[i] == null)                                                                    // placing a player in the game world
             {
-                //int randomLocation = Mathf.FloorToInt(Random.Range(1, emptyBlocks.Count - 0.0001f));
-                //emptySpace thisSpace = emptyBlocks[randomLocation];
-                //if (wallTiles[thisSpace.getXLocation(), thisSpace.getZLocation()] == 5)              // making sure that player doesn't overlap with rock
-                //{
+                Debug.Log("player" + i + " generated");
                 int margin = 5;
                 int randX = Random.Range(margin, gridScript.gridSizeX - margin);
                 int randY = Random.Range(margin, gridScript.gridSizeY - margin);
                 Vector3 randLocation;
-                // making sure that player doesn't overlap with rock
                 while (!gridScript.grid[randX, randY].walkable) {
                     randX = Random.Range(margin, gridScript.gridSizeX - margin);
                     randY = Random.Range(margin, gridScript.gridSizeY - margin);
                 }
                 randLocation = gridScript.grid[randX, randY].worldPosition;
-
-                //wallTiles[thisSpace.getXLocation(), thisSpace.getZLocation()] = 8;
-                //players[i] = (GameObject)Instantiate(players[i], new Vector3(thisSpace.getXLocation(), 0.5f, thisSpace.getZLocation()), Quaternion.identity);
-                players[i] = (GameObject)Instantiate(players[i], new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity);
+                
+                players[i] = (GameObject)Instantiate(playerPrefabs[i], new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity);
                 playerPlaced = true;
-                //}
             }
             playerPlaced = false;
         }
@@ -363,7 +400,25 @@ public class GameController : MonoBehaviour {
             rocks[i].GetComponent<RockScript>().destorySelf();                  // destorys all of the rocks
     }
 
-    public void itemSpawn(string playerInfo)                // spawn an item on to the game world !!!!!!!!!!!!!!!! USE CHECKPLAYEROVERLAP FUNCTION
+    void AIPathRequests() {
+        for (int i = 1; i < players.Count; i++) {
+            if (players[i] != null) {
+                Debug.Log("making " + i + "'s request");
+                players[i].GetComponent<Unit>().makePathRequest();
+            }
+        }
+    }
+
+    public void AIPathStop() {
+        for (int i = 1; i < players.Count; i++) {
+            if (players[i] != null) {
+                Debug.Log("player" + i + " stopped");
+                players[i].GetComponent<Unit>().StopCoroutine("FollowPath");
+            }
+        }
+    }
+
+    public void itemSpawn()                // spawn an item on to the game world !!!!!!!!!!!!!!!! USE CHECKPLAYEROVERLAP FUNCTION
     {
         int randX = Random.Range(0, gridScript.gridSizeX);
         int randY = Random.Range(0, gridScript.gridSizeY);
@@ -381,111 +436,31 @@ public class GameController : MonoBehaviour {
                 randY = Random.Range(0, gridScript.gridSizeY);
             }
             randLocation = gridScript.grid[randX, randY].worldPosition;
-
-            //if (wallTiles[thisSpace.getXLocation(), thisSpace.getZLocation()] == 5)    // making sure that player doesn't overlap with rock
-            for (int q = 0; q < players.Count; q++) {
-                if (players[q].tag == playerInfo) {
-                    if (dist(players[q].transform.position.x, randLocation.x, players[q].transform.position.z, randLocation.z) < 5.2f) {
-                        //if (dist(players[q].transform.position.x, thisSpace.getXLocation(), players[q].transform.position.z, thisSpace.getZLocation()) < 5.2f) {
-                        isGoodLocation = false; // too close to a player
-                                                // find new position
-                        randX = Random.Range(0, gridScript.gridSizeX);
-                        randY = Random.Range(0, gridScript.gridSizeY);
-                        break;
-                    }
-                }
-            }
-        }
-        //GameObject temp = (GameObject)Instantiate(pickUp, new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity);
-        //players[1].GetComponent<Unit>().target = temp.transform;
-        //item = temp;
-        ///*
-        if (playerInfo == "player1") {
-            //GameObject temp = (GameObject)Instantiate(pickUps[0], new Vector3(thisSpace.getXLocation(), 0.5f, thisSpace.getZLocation()), Quaternion.identity);
-            GameObject temp = (GameObject)Instantiate(pickUps[0], new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity);
-            items.Add(playerInfo + "pickUp", temp);                 // instantiates an item
-        }
-        else if (playerInfo == "player2") {
-            //GameObject temp = (GameObject)Instantiate(pickUps[1], new Vector3(thisSpace.getXLocation(), 0.5f, thisSpace.getZLocation()), Quaternion.identity);
-            GameObject temp = (GameObject)Instantiate(pickUps[1], new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity);
-            players[1].GetComponent<Unit>().target = temp.transform;
-            items.Add(playerInfo + "pickUp", temp);                 // instantiates an item
-            //players[1].GetComponent<Unit>().makePathRequest();
-        }
-        else if (playerInfo == "player3") {
-            //items.Add(playerInfo + "pickUp", (GameObject)Instantiate(pickUps[2], new Vector3(thisSpace.getXLocation(), 0.5f, thisSpace.getZLocation()), Quaternion.identity));                 // instantiates an item
-            items.Add(playerInfo + "pickUp", (GameObject)Instantiate(pickUps[2], new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity));                 // instantiates an item
-        }
-        else if (playerInfo == "player4") {
-            //items.Add(playerInfo + "pickUp", (GameObject)Instantiate(pickUps[3], new Vector3(thisSpace.getXLocation(), 0.5f, thisSpace.getZLocation()), Quaternion.identity));                 // instantiates an item
-            items.Add(playerInfo + "pickUp", (GameObject)Instantiate(pickUps[3], new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity));                 // instantiates an item
-        }//*/
-    }
-
-    public void removeItem(string itemTag) {    // not using in PlayerBase anymore
-        ///*
-        GameObject temp = null;
-        if (items.TryGetValue(itemTag, out temp)) {
-            Destroy(temp);
-            items.Remove(itemTag);
-        }
-        else
-            Debug.Log("ERROR - COULD NOT FIND " + itemTag);
-        //*/
-        //Destroy(pickUp);
-    }
-
-    public void moveItem(string itemTag) {
-        ///*
-        Debug.Log("item moving!");
-        GameObject temp = null;
-        if (items.TryGetValue(itemTag, out temp)) {
-            int randX = Random.Range(0, gridScript.gridSizeX);
-            int randZ = Random.Range(0, gridScript.gridSizeY);
-            Vector3 randLocation = Vector3.zero;
-
-            bool isGoodLocation = false;
-            while (!isGoodLocation) {                     // make sure not to over lap item with a rock
-                isGoodLocation = true;                  // assume that the location is good so far
-
-                randLocation = gridScript.grid[randX, randZ].worldPosition;
-                // making sure that player doesn't overlap with rock
-                while (!gridScript.grid[randX, randZ].walkable || !checkPositionWithPlayers(randLocation.x, randLocation.z, 3.0f)) {
-                    randX = Random.Range(0, gridScript.gridSizeX);
-                    randZ = Random.Range(0, gridScript.gridSizeY);
-                    randLocation = gridScript.grid[randX, randZ].worldPosition;
-                }
-                
-                temp.transform.position = new Vector3(randLocation.x, 0.5f, randLocation.z);
-                Debug.Log("new position set: " + temp.transform.position);
-                if (itemTag == "player2pickUp") {
-                    Debug.Log("player2 path requesting!");
-                    players[1].GetComponent<Unit>().makePathRequest();
-                }
-            }
-        }
-        else {
-            Debug.Log("Could not find this item to move");
-        }//*/
-        /*int randX = Random.Range(0, gridScript.gridSizeX);
-        int randZ = Random.Range(0, gridScript.gridSizeY);
-        Vector3 randLocation = Vector3.zero;
-
-        bool isGoodLocation = false;
-        while (!isGoodLocation) {                     // make sure not to over lap item with a rock
-            isGoodLocation = true;                  // assume that the location is good so far
-
-            randLocation = gridScript.grid[randX, randZ].worldPosition;
-            // making sure that player doesn't overlap with rock
-            while (!gridScript.grid[randX, randZ].walkable || !checkPositionWithPlayers(randLocation.x, randLocation.z, 3.0f)) {
+            
+            if ( checkPositionWithPlayers(randLocation.x, randLocation.z, 5.2f)) {
+                isGoodLocation = false; // too close to a player
+                                        // find new position
                 randX = Random.Range(0, gridScript.gridSizeX);
-                randZ = Random.Range(0, gridScript.gridSizeY);
-                randLocation = gridScript.grid[randX, randZ].worldPosition;
+                randY = Random.Range(0, gridScript.gridSizeY);
+                break;
             }
+        }
+        GameObject temp = (GameObject)Instantiate(pickUp, new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity);
+        for (int i = 1; i < players.Count; i++) {
+            if (players[i] != null)
+                players[i].GetComponent<Unit>().target = temp.transform;
+        }
+        item = temp;
+    }
 
-            pickUp.transform.position = new Vector3(randLocation.x, 0.5f, randLocation.z);
-            players[1].GetComponent<Unit>().makePathRequest();
-        }*/
+    public void removeItem() {    // not using in PlayerBase anymore
+        Destroy(item);
+    }
+
+    public void moveItem() {  // deletes the old item and make a new one
+        Destroy(item);
+        itemSpawn();
+        AIPathRequests();
     }
 
     float dist(float ax, float bx, float az, float bz)      // calculates the distance between two points
@@ -494,9 +469,10 @@ public class GameController : MonoBehaviour {
     }
 
     bool checkPositionWithPlayers(float x, float z, float d) {
-        for(int i = 0; i < players.Count; i++) {
-            if(dist(players[i].transform.position.x, x, players[i].transform.position.z, z) < d) {
-                return false;
+        for (int i = 0; i < players.Count; i++) {
+            if(players[i] != null) {
+                if (dist(players[i].transform.position.x, x, players[i].transform.position.z, z) < d)
+                    return false;
             }
         }
         return true;
@@ -512,7 +488,7 @@ public class GameController : MonoBehaviour {
         while (isGood && generatedRocks < amount) {
             switch (direction) {
                 case 0:             // North
-                    if (checkRockPlayerOverlapLgality(currentX, currentZ + 1) && wallTiles[currentX, currentZ + 1] == 5)     // if empty spot exists
+                    if (checkPositionWithPlayers(currentX, currentZ + 1, .9f) && wallTiles[currentX, currentZ + 1] == 5)     // if empty spot exists
                     {
                         wallTiles[currentX, currentZ + 1] = 6;    // try putting the rock in this position
                         if (checksForLegalRockSpawn()) {
@@ -529,7 +505,7 @@ public class GameController : MonoBehaviour {
                         isGood = false;
                     break;
                 case 1:             // East
-                    if (checkRockPlayerOverlapLgality(currentX + 1, currentZ) && wallTiles[currentX + 1, currentZ] == 5)       // if empty spot exists
+                    if (checkPositionWithPlayers(currentX + 1, currentZ, .9f) && wallTiles[currentX + 1, currentZ] == 5)       // if empty spot exists
                     {
                         wallTiles[currentX + 1, currentZ] = 6;    // try putting the rock in this position
                         if (checksForLegalRockSpawn()) {
@@ -546,7 +522,7 @@ public class GameController : MonoBehaviour {
                         isGood = false;
                     break;
                 case 2:             // South
-                    if (checkRockPlayerOverlapLgality(currentX, currentZ - 1) && wallTiles[currentX, currentZ - 1] == 5)       // if empty spot exists
+                    if (checkPositionWithPlayers(currentX, currentZ - 1, .9f) && wallTiles[currentX, currentZ - 1] == 5)       // if empty spot exists
                     {
                         wallTiles[currentX, currentZ - 1] = 6;    // try putting the rock in this position
                         if (checksForLegalRockSpawn()) {
@@ -563,7 +539,7 @@ public class GameController : MonoBehaviour {
                         isGood = false;
                     break;
                 case 3:             // West
-                    if (checkRockPlayerOverlapLgality(currentX - 1, currentZ) && wallTiles[currentX - 1, currentZ] == 5)       // if empty spot exists
+                    if (checkPositionWithPlayers(currentX - 1, currentZ, .9f) && wallTiles[currentX - 1, currentZ] == 5)       // if empty spot exists
                     {
                         wallTiles[currentX - 1, currentZ] = 6;    // try putting the rock in this position
                         if (checksForLegalRockSpawn()) {
@@ -661,15 +637,27 @@ public class GameController : MonoBehaviour {
         floodCheck(x, z - 1);   // down
     }
 
-    public void itemCount(string itemTag) {
-        if (itemTag == "player1pickUp")
-            players[0].GetComponent<PlayersBase>().inclementItemNum();
-        else if (itemTag == "player2pickUp")
-            players[1].GetComponent<PlayersBase>().inclementItemNum();
-        else if (itemTag == "player3pickUp")
-            players[2].GetComponent<PlayersBase>().inclementItemNum();
-        else if (itemTag == "player4pickUp")
-            players[3].GetComponent<PlayersBase>().inclementItemNum();
+    public void handleScores(string ptag, string what) {
+        if(what == "reset") {
+            if (ptag == "player1")
+                scores[0] = 0;
+            else if (ptag == "player2")
+                scores[1] = 0;
+            else if (ptag == "player3")
+                scores[2] = 0;
+            else if (ptag == "player4")
+                scores[3] = 0;
+        }
+        else if(what == "count") {
+            if (ptag == "player1")
+                scores[0] += 1;
+            else if (ptag == "player2")
+                scores[1] += 1;
+            else if (ptag == "player3")
+                scores[2] += 1;
+            else if (ptag == "player4")
+                scores[3] += 1;
+        }
     }
 
     //setters
@@ -681,11 +669,6 @@ public class GameController : MonoBehaviour {
     public void setTimeBetweenLasers(float x)               // sets the duration time between laser blasts
     {
         timeBetweenLasers = x;
-    }
-
-    public void setwave(int x)                             // sets the wave of the game
-    {
-        wave = x;
     }
 
     public void setWarningTime(float x) {
@@ -709,13 +692,9 @@ public class GameController : MonoBehaviour {
     public GameState getCurrentState() {
         return currentState;
     }
+
     public int getItemGoal() {
         return itemGoal;
-    }
-
-    public int getWave()                                   // returns the wave of the game
-    {
-        return wave;
     }
 
     public float getWarningTime() {
@@ -734,8 +713,20 @@ public class GameController : MonoBehaviour {
         return gameStart;
     }
 
+    public int getScores(string tag) {
+        if (tag == "player1")
+            return scores[0];
+        else if (tag == "player2")
+            return scores[1];
+        else if (tag == "player3")
+            return scores[2];
+        else if (tag == "player4")
+            return scores[3];
+        return 0;
+    }
+
     // buttons
     public void HomePress() {
-        Application.LoadLevel(1);
+        SceneManager.LoadScene("levelSelection");
     }
 }

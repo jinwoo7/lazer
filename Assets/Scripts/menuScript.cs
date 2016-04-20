@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI; // contains all classes for UI elements
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class menuScript : MonoBehaviour {
 
@@ -8,10 +9,9 @@ public class menuScript : MonoBehaviour {
     public Canvas howToScreen;
     public Button playButton;
     public Button exitButton;
-
-
-	// Use this for initialization
-	void Start () {
+    
+    // Use this for initialization
+    void Start () {
         quitMenu = quitMenu.GetComponent<Canvas>();
         howToScreen = howToScreen.GetComponent<Canvas>();
         playButton = playButton.GetComponent<Button>();
@@ -47,7 +47,7 @@ public class menuScript : MonoBehaviour {
     }
 
     public void StartLevel() {
-        Application.LoadLevel(1);
+        SceneManager.LoadScene("levelSelection");
     }
 
     public void ExitGame() {

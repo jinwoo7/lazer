@@ -7,30 +7,30 @@ public class UIController : MonoBehaviour {
     //public Text startText;
     public Text timerDisplay;
     public Text levelDisplay;
+    public Text episodeDisplay;
     public Text itemDisplay;
     public Text gameOverDisplay;
 
     private GameController gameController;
+    private memoryScript lvlMemory;
     // Use this for initialization
     void Start () {
+        lvlMemory = GameObject.FindGameObjectWithTag("Memory").GetComponent<memoryScript>();
         gameController = GetComponent<GameController>();
-        //gameOverDisplay.text = "";
-        //startText.text = "Press Spacebar to start!";
     }
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
 
     public void displayWave()
     {
-        levelDisplay.text = "Level: " + gameController.getWave();
+        levelDisplay.text = "Level: " + lvlMemory.getCurrentLvl();
+    }
+
+    public void displayEpisode() {
+        episodeDisplay.text = lvlMemory.getCurrentEpisode();
     }
 
     public void displayItemCount()
     {
-        itemDisplay.text = gameController.players[0].GetComponent<PlayersBase>().getItemNum() + " / " + gameController.getItemGoal();
+        itemDisplay.text = gameController.getScores("player1") + " / " + gameController.getItemGoal();
     }
 
     public void displayTime(float gameTimer)
@@ -45,16 +45,4 @@ public class UIController : MonoBehaviour {
 
         timerDisplay.text = timeStr;
     }
-
-    /*public void displayGameOver()
-    {
-        gameOverDisplay.text = "Game Over";
-        gameOverDisplay.color = Color.red;
-    }*/
-
-   /* public void setStartText(string s)
-    {
-        startText.text = s;
-    }*/
-
 }

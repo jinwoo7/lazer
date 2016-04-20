@@ -3,12 +3,16 @@ using System.Collections;
 
 public class PlayerController : PlayersBase
 {
-    void FixedUpdate()
-    {
-        if(gameController.playerMovement) {
+    Vector3 movement;
+    void FixedUpdate() {
+        if (gameController.playerMovement) {
             float moveHorizontal = Input.GetAxis("Horizontal");                         // controls the movement of the player
             float moveVertical = Input.GetAxis("Vertical");
-            Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
+            movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
+            rb.velocity = movement * speed * (Time.deltaTime * 25);
+        }
+        else {
+            movement = new Vector3(0.0f, 0.0f, 0.0f);
             rb.velocity = movement * speed * (Time.deltaTime * 25);
         }
     }

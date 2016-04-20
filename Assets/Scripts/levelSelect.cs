@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI; // contains all classes for UI elements
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class levelSelect : MonoBehaviour {
 
@@ -9,10 +10,11 @@ public class levelSelect : MonoBehaviour {
     public Image episode3;
     public Canvas lvlselection;
 
-    private int currentlvl;
+    private memoryScript lvlMemory;
 
     // Use this for initialization
     void Start () {
+        lvlMemory = GameObject.FindGameObjectWithTag("Memory").GetComponent<memoryScript>();
         episode1 = episode1.GetComponent<Image>();
         episode2 = episode2.GetComponent<Image>();
         episode3 = episode3.GetComponent<Image>();
@@ -21,55 +23,48 @@ public class levelSelect : MonoBehaviour {
     }
 
     public void lvl1Press() {
-        if(currentlvl == 1) {
-            Application.LoadLevel(2);
-        }
+        lvlMemory.setCurrentLvl(1);
+        SceneManager.LoadScene(lvlMemory.getCurrentEpisode());
     }
     public void lvl2Press() {
-        if (currentlvl == 1) {
-            Application.LoadLevel(2);
-        }
+        lvlMemory.setCurrentLvl(2);
+        SceneManager.LoadScene(lvlMemory.getCurrentEpisode());
     }
     public void lvl3Press() {
-        if (currentlvl == 1) {
-            Application.LoadLevel(2);
-        }
+        lvlMemory.setCurrentLvl(3);
+        SceneManager.LoadScene(lvlMemory.getCurrentEpisode());
     }
     public void lvl4Press() {
-        if (currentlvl == 1) {
-            Application.LoadLevel(2);
-        }
+        lvlMemory.setCurrentLvl(4);
+        SceneManager.LoadScene(lvlMemory.getCurrentEpisode());
     }
     public void lvl5Press() {
-        if (currentlvl == 1) {
-            Application.LoadLevel(2);
-        }
+        lvlMemory.setCurrentLvl(5);
+        SceneManager.LoadScene(lvlMemory.getCurrentEpisode());
     }
     public void lvl6Press() {
-        if (currentlvl == 1) {
-            Application.LoadLevel(2);
-        }
+        lvlMemory.setCurrentLvl(6);
+        SceneManager.LoadScene(lvlMemory.getCurrentEpisode());
     }
 
     public void backToMenu() {
-        Application.LoadLevel(0);
+        SceneManager.LoadScene("StartMenu");
     }
 
     public void episode1Press() {
-        currentlvl = 1;
+        lvlMemory.setCurrentEpisode("episode1");
         lvlselection.enabled = true;
     }
     public void episode2Press() {
-        currentlvl = 2;
+        lvlMemory.setCurrentEpisode("episode2");
         lvlselection.enabled = true;
     }
     public void episode3Press() {
-        currentlvl = 3;
+        lvlMemory.setCurrentEpisode("episode3");
         lvlselection.enabled = true;
     }
 
     public void backPress() {
-        currentlvl = 0;
         lvlselection.enabled = false;
     }
 }

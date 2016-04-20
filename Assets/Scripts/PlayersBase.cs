@@ -11,11 +11,8 @@ public class PlayersBase : MonoBehaviour {
     protected UIController uiController;
     protected Rigidbody rb;
 
-    private int itemNum;
-
     // Use this for initialization
     void Start () {
-        itemNum = 0;
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
         uiController = GameObject.FindGameObjectWithTag("GameController").GetComponent<UIController>();
         rb = GetComponent<Rigidbody>();
@@ -23,43 +20,22 @@ public class PlayersBase : MonoBehaviour {
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag(gameObject.tag+"pickUp"))               // picking up items
+        if (other.gameObject.CompareTag("pickUp"))               // picking up items
         {
+            gameController.moveItem();
             itemSound.Play(0);                                  // playing item pickup sound
-            gameController.itemCount(other.tag);
+            gameController.handleScores(tag, "count");
             uiController.displayItemCount();
-            gameController.moveItem(other.tag);
         }
         if (other.gameObject.CompareTag("Laser"))               // picking up items
         {
-            if (tag == "player1")
-                gameController.players.RemoveAt(0);
-            if (tag == "player2")
-                gameController.players.RemoveAt(1);
-            if (tag == "player3")
-                gameController.players.RemoveAt(0);
-            if (tag == "player4")
-                gameController.players.RemoveAt(1);
             Instantiate(explosion, other.transform.position, other.transform.rotation);
             Destroy(other.gameObject);
             Destroy(gameObject);
-            // signal GAME OVER HERE!!
-            gameController.setCurrentState(GameController.GameState.Gameover);
+            if(tag == "player1") {
+                gameController.AIPathStop();
+                gameController.setCurrentState(GameController.GameState.Gameover);
+            }            
         }
-    }
-
-    public void resetItemNum()
-    {
-        itemNum = 0;
-    }
-
-    public void inclementItemNum()
-    {
-        itemNum++;
-    }
-    
-    public int getItemNum()
-    {
-        return itemNum;
     }
 }

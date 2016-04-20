@@ -37,23 +37,26 @@ public class Unit : MonoBehaviour {
     }
 
     IEnumerator FollowPath() {
-        Vector3 currentWaypoint = path[0];
+        if (path.Length > 0) {
+            Vector3 currentWaypoint = path[0];
 
-        while (true) {
-            if(transform.position == currentWaypoint) {
-                xLoc = transform.position.x;
-                zLoc = transform.position.z;
-                targetIndex++;                          // advance to next waypoint in the path
-                if(targetIndex >= path.Length) {
-                    Debug.Log("done with following path");
-                    yield break;                        // exit out the Coroutine
+            while (true) {
+                if (transform.position == currentWaypoint) {
+                    xLoc = transform.position.x;
+                    zLoc = transform.position.z;
+                    targetIndex++;                          // advance to next waypoint in the path
+                    if (targetIndex >= path.Length) {
+                        Debug.Log("done with following path");
+                        yield break;                        // exit out the Coroutine
+                    }
+                    currentWaypoint = path[targetIndex];    // set new way point
                 }
-                currentWaypoint = path[targetIndex];    // set new way point
+                // moving our position move closer to currentWayPoint each frame;
+                transform.position = Vector3.MoveTowards(transform.position, currentWaypoint, speed * Time.deltaTime);
+                yield return null;  // exit to move over to the next frame
             }
-            // moving our position move closer to currentWayPoint each frame;
-            transform.position = Vector3.MoveTowards(transform.position, currentWaypoint, speed* Time.deltaTime);
-            yield return null;  // exit to move over to the next frame
         }
+        yield break;
     }
 
     public void OnDrawGizmos() {
