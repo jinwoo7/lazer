@@ -14,7 +14,7 @@ public class UIController : MonoBehaviour {
     private GameController gameController;
     private memoryScript lvlMemory;
     // Use this for initialization
-    void Start () {
+    void Awake () {
         lvlMemory = GameObject.FindGameObjectWithTag("Memory").GetComponent<memoryScript>();
         gameController = GetComponent<GameController>();
     }
@@ -25,6 +25,7 @@ public class UIController : MonoBehaviour {
     }
 
     public void displayEpisode() {
+        Debug.Log(lvlMemory.getCurrentEpisode());
         episodeDisplay.text = lvlMemory.getCurrentEpisode();
     }
 

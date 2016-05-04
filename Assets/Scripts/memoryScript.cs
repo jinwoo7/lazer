@@ -13,6 +13,7 @@ public class memoryScript : MonoBehaviour {
     private string currentEpisode;
     // Use this for initialization
     void Awake () {
+        currentEpisode = "";
         episode1Points=0;
         episode1Progress=0;
         episode2Points=0;

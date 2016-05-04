@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class levelSelect : MonoBehaviour {
 
+    public Text episodeDisplay;
     public Image episode1;
     public Image episode2;
     public Image episode3;
@@ -14,6 +15,7 @@ public class levelSelect : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
+        episodeDisplay.text = "";
         lvlMemory = GameObject.FindGameObjectWithTag("Memory").GetComponent<memoryScript>();
         episode1 = episode1.GetComponent<Image>();
         episode2 = episode2.GetComponent<Image>();
@@ -53,14 +55,17 @@ public class levelSelect : MonoBehaviour {
 
     public void episode1Press() {
         lvlMemory.setCurrentEpisode("episode1");
+        episodeDisplay.text = "Episdoe 1";
         lvlselection.enabled = true;
     }
     public void episode2Press() {
         lvlMemory.setCurrentEpisode("episode2");
+        episodeDisplay.text = "Episdoe 2";
         lvlselection.enabled = true;
     }
     public void episode3Press() {
         lvlMemory.setCurrentEpisode("episode3");
+        episodeDisplay.text = "Episdoe 3";
         lvlselection.enabled = true;
     }
 

@@ -13,6 +13,7 @@ public class GameController : MonoBehaviour {
     public TileType[] tileTypes;
     public GameObject[] playerPrefabs;
     public GameObject pickUp;   // use this instead
+    public GameObject blueItem;
     public GameObject rock;
     public List<GameObject> players = new List<GameObject>(3);
     public bool playerMovement;
@@ -35,6 +36,8 @@ public class GameController : MonoBehaviour {
     private int groupingMax;
     private float timeLimit;
     private float timeBetweenLasers;                // duration between the lasers
+    private float specialItemTime;
+    private bool specialItemOnce;
     private float warningTime;
     private float lazertimer = 0.0f;
     private float gameTimer;
@@ -42,10 +45,14 @@ public class GameController : MonoBehaviour {
     private int mapSizeX = 13;
     private int mapSizeZ = 13;
     private int[] scores = new int[4];
+    private bool successful;
     private GameObject[] wall;                                  // array of walls in the game
     private List<GameObject> rocks = new List<GameObject>();    // array of rocks in the game
     private List<emptySpace> emptyBlocks = new List<emptySpace>();
+    private pathRequestManager manager;
     private GameObject item;
+    private GameObject specialItem;
+    private bool isSepcialAvailable;
     private bool gameStart = false;
     private bool levelSetup;
     private UIController uiController;
@@ -69,8 +76,10 @@ public class GameController : MonoBehaviour {
         endScreen.enabled = false;
         playerMovement = false;
         levelSetup = true;
+        isSepcialAvailable = false;
 
         lvlMemory = GameObject.FindGameObjectWithTag("Memory").GetComponent<memoryScript>();
+        manager = GetComponent<pathRequestManager>();
         gridScript = GetComponent<Grid>();
         uiController = GetComponent<UIController>();
         generateAllTiles();
@@ -92,10 +101,13 @@ public class GameController : MonoBehaviour {
                 }
                 playerMovement = false;
                 if (Input.GetKeyDown(KeyCode.Space)) {
+                    manager.clearQueue();
+                    players[0].GetComponent<PlayersBase>().speed = 6.0f;
+                    setCurrentState(GameState.Playing); // change this to countdown state when I have time
                     pauseScreen.enabled = false;
                     setGameStart(true);
                     AIPathRequests();
-                    setCurrentState(GameState.Playing); // change this to countdown state when I have time
+                    successful = false;
                 }
                 break;
             case GameState.Playing:
@@ -106,6 +118,17 @@ public class GameController : MonoBehaviour {
                 lazertimer += Time.deltaTime;
                 if (gameTimer <= 0f)                                                  // round over
                 {                                                                    // reseting for next round
+                    lazertimer = 0;
+                    gameTimer = getTimeLimit();
+                    gameOverScreen.enabled = true;
+                    AIPathStop();
+                    setCurrentState(GameState.Gameover);
+                }
+                else if(gameTimer < specialItemTime && specialItemOnce) {
+                    itemSpawn(true);
+                    specialItemOnce = false;
+                }
+                else if (successful) {
                     lazertimer = 0;
                     gameTimer = getTimeLimit();
                     succesScreen.enabled = true;
@@ -126,6 +149,7 @@ public class GameController : MonoBehaviour {
                 playerMovement = false;
                 if (Input.GetKeyDown(KeyCode.Space)) {
                     destoryAllRocks();
+                    destroyAllPlayers();
                     succesScreen.enabled = false;
                     pauseScreen.enabled = true;
                     levelSetup = true;
@@ -138,6 +162,8 @@ public class GameController : MonoBehaviour {
                 playerMovement = false;
                 if (Input.GetKeyDown(KeyCode.Space)) {
                     destoryAllRocks();
+                    resetAllScores();
+                    destroyAllPlayers();
                     gameOverScreen.enabled = false;
                     pauseScreen.enabled = true;
                     levelSetup = true;
@@ -261,14 +287,16 @@ public class GameController : MonoBehaviour {
 
     // ways to check item overlap
     void setupLevel() {
+        bool specialItem = false;
         if (lvlMemory.getCurrentLvl() == 1) {
             maxRockNum = 40;
             itemGoal = 3;
-            setTimeLimit(5.0f); // 30 f
+            setTimeLimit(30.0f); // 30 f
             groupingMax = 5;
             timeBetweenLasers = 4.0f;                   // duration between the lasers
             warningTime = 3.0f;
             numOfLasers = 5;                            // number of lasers to be fired at a time
+            specialItem = true;
             Debug.Log("Loading Level 1");
         }
         else if (lvlMemory.getCurrentLvl() == 2) {
@@ -303,7 +331,7 @@ public class GameController : MonoBehaviour {
         }
         else if (lvlMemory.getCurrentLvl() == 5) {
             maxRockNum = 15;
-            itemGoal = 10;
+            itemGoal = 7;
             setTimeLimit(30.0f);
             groupingMax = 1;
             timeBetweenLasers = 3.0f;                   // duration between the lasers
@@ -313,7 +341,7 @@ public class GameController : MonoBehaviour {
         }
         else if (lvlMemory.getCurrentLvl() == 6) {
             maxRockNum = 15;
-            itemGoal = 15;
+            itemGoal = 8;
             setTimeLimit(40.0f);
             groupingMax = 1;
             timeBetweenLasers = 3.0f;                   // duration between the lasers
@@ -321,12 +349,11 @@ public class GameController : MonoBehaviour {
             numOfLasers = 11;                            // number of lasers to be fired at a time
             Debug.Log("Loading Level 6");
         }
+        specialItemTimeSet(specialItem);
+        specialItemOnce = true;
+        Debug.Log("special item at: " + specialItemTime);
         gameTimer = getTimeLimit();
-        for (int i = 0; i < players.Count; i++) { // resetting all item counter of all players
-            if(players[i] != null)
-                handleScores(players[i].tag, "reset");
-        }
-
+        resetAllScores();                            // resetting all item counter of all players
         uiController.displayItemCount();
         uiController.displayWave();
         generateRocks();
@@ -346,14 +373,16 @@ public class GameController : MonoBehaviour {
                 }
             }
         }
-        removeItem();                       // removes player 1 pickup
+        if(item != null)
+            removeItem();                       // removes point item
+        if(specialItem != null)
+            removeItem(true);                   // removes speed item
     }
 
     void generatePlayer()                                   // always call this after generateRocks
     {
-        bool playerPlaced = false;
         for (int i = 0; i < players.Count; i++) {
-            while (!playerPlaced && players[i] == null)                                                                    // placing a player in the game world
+            while (players[i] == null)                                                                    // placing a player in the game world
             {
                 Debug.Log("player" + i + " generated");
                 int margin = 5;
@@ -367,9 +396,7 @@ public class GameController : MonoBehaviour {
                 randLocation = gridScript.grid[randX, randY].worldPosition;
                 
                 players[i] = (GameObject)Instantiate(playerPrefabs[i], new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity);
-                playerPlaced = true;
             }
-            playerPlaced = false;
         }
     }
 
@@ -400,13 +427,89 @@ public class GameController : MonoBehaviour {
             rocks[i].GetComponent<RockScript>().destorySelf();                  // destorys all of the rocks
     }
 
-    void AIPathRequests() {
+    public void AIPathRequests() {
         for (int i = 1; i < players.Count; i++) {
             if (players[i] != null) {
-                Debug.Log("making " + i + "'s request");
-                players[i].GetComponent<Unit>().makePathRequest();
+                if (currentState == GameState.Playing) {
+                    Unit tempScript = players[i].GetComponent<Unit>();
+                    Debug.Log("making " + i + "'s request");
+                    if (tempScript.goingForPoint) { // currently going after points
+                        Debug.Log("pursueing Point!");
+                        // if not the closest && feel lazy
+                        if (!isClosest(players[i]) && !tempScript.goForPoint(Random.Range(0.0f, 10.0f))) {
+                            tempScript.goingForPoint = false;
+                            tempScript.wondering = true;
+                            wonderAround(players[i]);
+                        }
+                        // otherwise keep pursuing for points
+                        else if (tempScript.target != item.transform.position) {
+                            tempScript.target = item.transform.position;
+                            tempScript.makePathRequest();
+                        }
+                    }
+                    else if (tempScript.goingForSpeed) { // currently going after speed
+                        Debug.Log("pursueing speed!");
+                        if (!isSepcialAvailable) {  // special item not exiting anymore, go for regular item
+                            tempScript.goingForSpeed = false;
+                            // if I don't wanna be lazy
+                            // OR not the closest but still  want to go for it
+                            if (isClosest(players[i]) || tempScript.goForPoint(Random.Range(0.0f, 10.0f))) {
+                                tempScript.goingForPoint = true;
+                                tempScript.target = item.transform.position;
+                                tempScript.makePathRequest();
+                            }
+                            // not closest and want to wonder
+                            else { //wonder
+                                tempScript.wondering = true;
+                                wonderAround(players[i]);
+                            }
+                        }
+                        // else if special item exist, keep going for it
+                        else if (!tempScript.moving) {
+                            tempScript.target = specialItem.transform.position;
+                            tempScript.makePathRequest();
+                        }
+                    }
+                    else {
+                        Debug.Log("pursueing neither!");
+                        if (tempScript.wondering) { // currently wondering
+                            Debug.Log("Currently wondering");
+                            // if speed item is available and want to pursue it
+                            if (isSepcialAvailable && players[i].GetComponent<Unit>().goForSpeed(Random.Range(0.0f, 10.0f))) {
+                                Debug.Log("gonna pursue special!");
+                                tempScript.wondering = false;
+                                tempScript.goingForSpeed = true;
+                                tempScript.target = specialItem.transform.position;
+                                tempScript.makePathRequest();
+                            }
+                            // if closest to item or want to pursue an item
+                            else if (isClosest(players[i]) || tempScript.goForPoint(Random.Range(0.0f, 10.0f))) {
+                                Debug.Log("gonna pursue point!");
+                                tempScript.wondering = false;
+                                tempScript.goingForPoint = true;
+                                tempScript.target = item.transform.position;
+                                tempScript.makePathRequest();
+                            }
+                            // otherwise don't do anything. aka keep moving to wondering destination
+                        }
+                        else if (!tempScript.moving) { // if currently not doing anything, wonder around!
+                            Debug.Log("gonna wonder!");
+                            tempScript.wondering = true;
+                            wonderAround(players[i]);
+                        }
+                    }
+                }
+                else            // game is paused
+                    players[i].GetComponent<Unit>().StopCoroutine("FollowPath");
             }
         }
+        
+    }
+
+    public void wonderAround(GameObject charactor) {
+        Vector3 randLocation = randomLocation();
+        charactor.GetComponent<Unit>().wonderingTarget = new Vector3(randLocation.x, 0.5f, randLocation.z);
+        charactor.GetComponent<Unit>().makeWonderingPathRequest();
     }
 
     public void AIPathStop() {
@@ -418,8 +521,7 @@ public class GameController : MonoBehaviour {
         }
     }
 
-    public void itemSpawn()                // spawn an item on to the game world !!!!!!!!!!!!!!!! USE CHECKPLAYEROVERLAP FUNCTION
-    {
+    public Vector3 randomLocation() {
         int randX = Random.Range(0, gridScript.gridSizeX);
         int randY = Random.Range(0, gridScript.gridSizeY);
         Vector3 randLocation = Vector3.zero;
@@ -427,8 +529,6 @@ public class GameController : MonoBehaviour {
         bool isGoodLocation = false;
         while (!isGoodLocation) {                     // make sure not to over lap item with a rock
             isGoodLocation = true;                  // assume that the location is good so far
-                                                    //randomLocation = Mathf.FloorToInt(Random.Range(1, emptyBlocks.Count - 0.0001f));
-                                                    //thisSpace = emptyBlocks[randomLocation];
 
             // making sure that player doesn't overlap with rock
             while (!gridScript.grid[randX, randY].walkable) {
@@ -436,8 +536,8 @@ public class GameController : MonoBehaviour {
                 randY = Random.Range(0, gridScript.gridSizeY);
             }
             randLocation = gridScript.grid[randX, randY].worldPosition;
-            
-            if ( checkPositionWithPlayers(randLocation.x, randLocation.z, 5.2f)) {
+
+            if (checkPositionWithPlayers(randLocation.x, randLocation.z, 5.2f)) {
                 isGoodLocation = false; // too close to a player
                                         // find new position
                 randX = Random.Range(0, gridScript.gridSizeX);
@@ -445,22 +545,58 @@ public class GameController : MonoBehaviour {
                 break;
             }
         }
-        GameObject temp = (GameObject)Instantiate(pickUp, new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity);
-        for (int i = 1; i < players.Count; i++) {
-            if (players[i] != null)
-                players[i].GetComponent<Unit>().target = temp.transform;
-        }
-        item = temp;
+        return randLocation;
     }
 
-    public void removeItem() {    // not using in PlayerBase anymore
-        Destroy(item);
+    public void itemSpawn(bool isSpecial = false)                // spawn an item on to the game world !!!!! USE CHECKPLAYEROVERLAP FUNCTION
+    {
+        Vector3 randLocation = randomLocation();
+        if (!isSpecial) {
+            GameObject temp = (GameObject)Instantiate(pickUp, new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity);
+            item = temp;
+        }
+        else {
+            GameObject temp = (GameObject)Instantiate(blueItem, new Vector3(randLocation.x, 0.5f, randLocation.z), Quaternion.identity);
+            specialItem = temp;
+            isSepcialAvailable = true;
+        }
+    }
+
+    public void removeItem(bool isSpecial = false) {    // not using in PlayerBase anymore
+        if (!isSpecial)
+            Destroy(item);
+        else {
+            isSepcialAvailable = false;
+            Destroy(specialItem);
+        }
+    }
+
+    public void specialItemTimeSet(bool levelWithItem = false) {
+        if (levelWithItem)
+            specialItemTime = Random.Range(timeLimit - 3.0f, timeLimit / 2);
+        else
+            specialItemTime = -999.999f;
     }
 
     public void moveItem() {  // deletes the old item and make a new one
         Destroy(item);
         itemSpawn();
-        AIPathRequests();
+        //AIPathRequests();
+    }
+
+    public bool isClosest(GameObject me) {
+        Transform dest = item.transform;
+        // getting current object's distance to target
+        float myDist = dist(dest.position.x, me.transform.position.x, dest.position.z, me.transform.position.z);
+
+        for(int i = 1; i < players.Count; i++) {
+            if(players[i] != null && players[i] != me) {
+                float tempDist = dist(dest.position.x, players[i].transform.position.x, dest.position.z, players[i].transform.position.z);
+                if (tempDist < myDist)
+                    return false;
+            }
+        }
+        return true;
     }
 
     float dist(float ax, float bx, float az, float bz)      // calculates the distance between two points
@@ -660,6 +796,21 @@ public class GameController : MonoBehaviour {
         }
     }
 
+    public void resetAllScores() {
+        scores[0] = 0;
+        scores[1] = 0;
+        scores[2] = 0;
+        scores[3] = 0;
+    }
+
+    public void destroyAllPlayers() {
+        for (int i = 1; i < players.Count; i++) {
+            if (players[i] != null) {
+                Destroy(players[i]);
+            }
+        }
+    }
+
     //setters
     public void setNumOfLasers(int x)                       // sets the number of lasers to be fired at a time
     {
@@ -686,6 +837,14 @@ public class GameController : MonoBehaviour {
     void setGameStart(bool x)                               // sets flag that will start the game
     {
         gameStart = x;
+    }
+
+    public void setSucessful(bool x) {
+        successful = x;
+    }
+
+    public void setIsSepcialAvailable(bool x) {
+        isSepcialAvailable = false;
     }
 
     //getters

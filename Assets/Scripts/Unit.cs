@@ -3,50 +3,78 @@ using System.Collections;
 
 public class Unit : MonoBehaviour {
 
-    public Transform target;
+    public Vector3 target;
+    public Vector3 wonderingTarget;
+    public bool goingForPoint;
+    public bool goingForSpeed;
+    public bool wondering;
+    public bool moving;
+    public float speedPercentage, lazyPercentage;
+    GameController gameC;
     float speed = 3f;
     Vector3[] path;
     int targetIndex;
-    float xLoc;
-    float zLoc;
 
     void Start() {
+        speedPercentage = Random.Range(0f, 6.5f);
+        lazyPercentage = Random.Range(0f, 6.0f);
+        goingForPoint = false;
+        goingForSpeed = false;
+        wondering = false;
+        moving = false;
+        gameC = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
+    }
+
+    public bool goForSpeed(float randomNum) {
+        if (randomNum < speedPercentage)
+            return true;
+        return false;
+    }
+
+    public bool goForPoint(float randomNum) {
+        if (randomNum < lazyPercentage)
+            return true;
+        return false;
+    }
+
+    public void makeWonderingPathRequest() {
+        Debug.Log(tag + " wondering request!");
+        pathRequestManager.RequestPath(transform.position, wonderingTarget, OnPathFound);
     }
 
     public void makePathRequest() {
-        pathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
+        pathRequestManager.RequestPath(transform.position, target, OnPathFound);
     }
 
     public void OnPathFound(Vector3[] newPath, bool pathSuccessful) {
-        Debug.Log(pathSuccessful);
+        Debug.Log(tag + " " + pathSuccessful);
         if (pathSuccessful) {
             StopCoroutine("FollowPath");
             targetIndex = 0;
             Debug.Log("Stopped Coroutine!");
 
             path = newPath;
-            Debug.Log("Path Length: " + path.Length);
-            for (int i = 0; i < path.Length; i++) {
-                Debug.Log(path[i]);
-            }
 
-            
             StartCoroutine("FollowPath");
             Debug.Log("Started Coroutine!");
         }
     }
 
     IEnumerator FollowPath() {
+        moving = true;
         if (path.Length > 0) {
             Vector3 currentWaypoint = path[0];
 
             while (true) {
                 if (transform.position == currentWaypoint) {
-                    xLoc = transform.position.x;
-                    zLoc = transform.position.z;
                     targetIndex++;                          // advance to next waypoint in the path
                     if (targetIndex >= path.Length) {
                         Debug.Log("done with following path");
+                        goingForPoint = false;
+                        goingForSpeed = false;
+                        wondering = false;
+                        moving = false;
+                        gameC.AIPathRequests();
                         yield break;                        // exit out the Coroutine
                     }
                     currentWaypoint = path[targetIndex];    // set new way point
@@ -55,6 +83,13 @@ public class Unit : MonoBehaviour {
                 transform.position = Vector3.MoveTowards(transform.position, currentWaypoint, speed * Time.deltaTime);
                 yield return null;  // exit to move over to the next frame
             }
+        }
+        else {
+            goingForPoint = false;
+            goingForSpeed = false;
+            wondering = false;
+            moving = false;
+            gameC.AIPathRequests();
         }
         yield break;
     }
@@ -65,7 +100,7 @@ public class Unit : MonoBehaviour {
                 Gizmos.color = Color.black;                     // daw the path that you already traveled
                 Gizmos.DrawCube(path[i], Vector3.one);
 
-                if(i == targetIndex) {
+                if (i == targetIndex) {
                     Gizmos.DrawLine(transform.position, path[i]);   // line that we are moving along.
                 }
                 else {
@@ -75,11 +110,4 @@ public class Unit : MonoBehaviour {
         }
     }
 
-    public void setxLoc(float newX) {
-        xLoc = newX;
-    }
-
-    public void setzLoc(float newZ) {
-        zLoc = newZ;
-    }
 }

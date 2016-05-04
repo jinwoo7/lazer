@@ -69,6 +69,7 @@ public class pathfinding : MonoBehaviour {
         if (pathSuccess) {      // if the path finding was an sucess!
             waypoints = RetracePath(startNode, targetNode);
         }
+        UnityEngine.Debug.Log("pathSuccess : " + pathSuccess);
         requestManager.FinishedProcessingPath(waypoints, pathSuccess);
     }
 

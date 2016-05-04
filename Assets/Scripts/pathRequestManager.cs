@@ -29,11 +29,36 @@ public class pathRequestManager : MonoBehaviour {
     /* check to see if currently processing a path.
        if not, ask the pathfinding script to process the next one*/
     void TryProcessNext() {
+        int before = pathRequestQueue.Count;
+        Debug.Log("processing next! count = " + pathRequestQueue.Count);
+        Debug.Log("isporcessingPath = " + isProcessingPath);
         if (!isProcessingPath && pathRequestQueue.Count > 0) {   // if not processing and the queue is not empty
+            Debug.Log("Dequeuing!");
             currentPathRequest = pathRequestQueue.Dequeue();     // gets a request from the queue
             isProcessingPath = true;
-            pathfinding.StartFindPath(currentPathRequest.pathStart, currentPathRequest.pathEnd);
+            try {
+                pathfinding.StartFindPath(currentPathRequest.pathStart, currentPathRequest.pathEnd);
+            }
+            catch (Exception e){
+                Debug.Log("ERROR: " + e);
+                isProcessingPath = false;
+            }
+           
         }
+        Debug.Log("processed! count = " + pathRequestQueue.Count);
+        int after = pathRequestQueue.Count;
+        if(before != 0 && after >= 2+before) {
+            Debug.Log("TRASHHHHHHHHHHHHHHHHHHHHH");
+            pathRequestQueue.Dequeue();
+        }
+        
+    }
+
+    // clears all queued commands
+    public void clearQueue() {
+        Debug.Log("In clear Queue!");
+        pathRequestQueue = new Queue<PathRequest>();
+        isProcessingPath = false;
     }
 
     /* will be called by the pathfinding script once it finish finding the path*/
