@@ -834,8 +834,7 @@ public class GameController : MonoBehaviour {
         timeLimit = t;
     }
 
-    void setGameStart(bool x)                               // sets flag that will start the game
-    {
+    void setGameStart(bool x) {                              // sets flag that will start the game
         gameStart = x;
     }
 

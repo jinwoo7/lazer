@@ -26,6 +26,13 @@ public class LaserScript : MonoBehaviour {
         else if (towards == "SouthWall"){
             rb.velocity = transform.forward * -speed;
         }
+
+        else if (towards == "UP")
+            rb.velocity = transform.up * speed;
+        else if (towards == "DOWN")
+            rb.velocity = transform.up * -speed;
+
+
     }
 
     void Update()
@@ -92,5 +99,8 @@ public class LaserScript : MonoBehaviour {
 
         else if (x == "WestWall")
             towards = "EastWall";
+
+        else if (x == "UP" || x == "DOWN")
+            towards = x;
     }
 }

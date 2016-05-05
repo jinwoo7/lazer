@@ -55,17 +55,17 @@ public class levelSelect : MonoBehaviour {
 
     public void episode1Press() {
         lvlMemory.setCurrentEpisode("episode1");
-        episodeDisplay.text = "Episdoe 1";
+        episodeDisplay.text = "Episode 1";
         lvlselection.enabled = true;
     }
     public void episode2Press() {
         lvlMemory.setCurrentEpisode("episode2");
-        episodeDisplay.text = "Episdoe 2";
+        episodeDisplay.text = "Episode 2";
         lvlselection.enabled = true;
     }
     public void episode3Press() {
         lvlMemory.setCurrentEpisode("episode3");
-        episodeDisplay.text = "Episdoe 3";
+        episodeDisplay.text = "Episode 3";
         lvlselection.enabled = true;
     }
 
