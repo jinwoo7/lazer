@@ -9,7 +9,11 @@ public class menuScript : MonoBehaviour {
     public Canvas howToScreen;
     public Button playButton;
     public Button exitButton;
-    
+    public AudioClip clickSound;
+    public AudioClip hoverSound;
+
+    private AudioSource source;
+
     // Use this for initialization
     void Start () {
         quitMenu = quitMenu.GetComponent<Canvas>();
@@ -18,14 +22,13 @@ public class menuScript : MonoBehaviour {
         exitButton = exitButton.GetComponent<Button>();
         howToScreen.enabled = false;
         quitMenu.enabled = false;
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+        source = GetComponent<AudioSource>();
+        source.clip = hoverSound;
+    }
 
     public void ExitPress() {
+        source.clip = clickSound;
+        source.PlayOneShot(clickSound);
         quitMenu.enabled = true;
         playButton.enabled = false;
         exitButton.enabled = false;
@@ -33,6 +36,8 @@ public class menuScript : MonoBehaviour {
     }
 
     public void NoPress() {
+        source.clip = clickSound;
+        source.PlayOneShot(clickSound);
         quitMenu.enabled = false;
         playButton.enabled = true;
         exitButton.enabled = true;
@@ -40,6 +45,8 @@ public class menuScript : MonoBehaviour {
     }
 
     public void HowToPress() {
+        source.clip = clickSound;
+        source.PlayOneShot(clickSound);
         quitMenu.enabled = false;
         playButton.enabled = false;
         exitButton.enabled = false;
@@ -52,5 +59,10 @@ public class menuScript : MonoBehaviour {
 
     public void ExitGame() {
         Application.Quit();
+    }
+
+    public void onHover() {
+        source.clip = hoverSound;
+        source.PlayOneShot(hoverSound);
     }
 }

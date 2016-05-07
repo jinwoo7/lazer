@@ -32,22 +32,21 @@ public class pathRequestManager : MonoBehaviour {
         int before = pathRequestQueue.Count;
         Debug.Log("processing next! count = " + pathRequestQueue.Count);
         Debug.Log("isporcessingPath = " + isProcessingPath);
-        if (!isProcessingPath && pathRequestQueue.Count > 0) {   // if not processing and the queue is not empty
+        try {
+            if (!isProcessingPath && pathRequestQueue.Count > 0) {   // if not processing and the queue is not empty
             Debug.Log("Dequeuing!");
             currentPathRequest = pathRequestQueue.Dequeue();     // gets a request from the queue
             isProcessingPath = true;
-            try {
-                pathfinding.StartFindPath(currentPathRequest.pathStart, currentPathRequest.pathEnd);
+            pathfinding.StartFindPath(currentPathRequest.pathStart, currentPathRequest.pathEnd);
             }
-            catch (Exception e){
-                Debug.Log("ERROR: " + e);
-                isProcessingPath = false;
-            }
-           
+        }catch (Exception e) {
+            Debug.Log("ERROR: " + e + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            isProcessingPath = false;
         }
         Debug.Log("processed! count = " + pathRequestQueue.Count);
         int after = pathRequestQueue.Count;
-        if(before != 0 && after >= 2+before) {
+        int playerNum = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>().countPlayers();
+        if(before != 0 && after >= (playerNum-1)+before) {
             Debug.Log("TRASHHHHHHHHHHHHHHHHHHHHH");
             pathRequestQueue.Dequeue();
         }

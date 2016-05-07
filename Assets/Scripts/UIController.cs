@@ -9,7 +9,6 @@ public class UIController : MonoBehaviour {
     public Text levelDisplay;
     public Text episodeDisplay;
     public Text itemDisplay;
-    public Text gameOverDisplay;
 
     private GameController gameController;
     private memoryScript lvlMemory;
@@ -21,17 +20,28 @@ public class UIController : MonoBehaviour {
 
     public void displayWave()
     {
-        levelDisplay.text = "Level: " + lvlMemory.getCurrentLvl();
+        levelDisplay.text = "Level " + lvlMemory.getCurrentLvl();
     }
 
     public void displayEpisode() {
         Debug.Log(lvlMemory.getCurrentEpisode());
-        episodeDisplay.text = lvlMemory.getCurrentEpisode();
+        string temp = lvlMemory.getCurrentEpisode();
+        if (temp == "episode1")
+            temp = "Episode 1";
+        else if (temp == "episode2")
+            temp = "Episode 2";
+        else if (temp == "episode3")
+            temp = "Episode 3";
+        episodeDisplay.text = temp;
     }
 
     public void displayItemCount()
     {
-        itemDisplay.text = gameController.getScores("player1") + " / " + gameController.getItemGoal();
+        if(gameController.getScores("player1") < gameController.getItemGoal())
+            itemDisplay.color = Color.red;
+        else
+            itemDisplay.color = Color.blue;
+        itemDisplay.text = gameController.getScores("player1") + " / " + gameController.getItemGoal() + "\ncollected";
     }
 
     public void displayTime(float gameTimer)
@@ -44,6 +54,10 @@ public class UIController : MonoBehaviour {
         else
             timeStr = seconds.ToString("F2");
 
+        if (seconds < 5)
+            timerDisplay.color = Color.red;
+        else
+            timerDisplay.color = Color.black;
         timerDisplay.text = timeStr;
     }
 }

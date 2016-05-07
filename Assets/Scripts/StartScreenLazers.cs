@@ -59,5 +59,4 @@ public class StartScreenLazers : MonoBehaviour {
             tempLazer.GetComponent<LaserScript>().setTowards("EastWall");
         }
     }
-
 }

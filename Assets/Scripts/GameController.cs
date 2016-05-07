@@ -175,13 +175,13 @@ public class GameController : MonoBehaviour {
                     endScreen.enabled = false;
                     lvlMemory.setCurrentLvl(1);
                     switch (lvlMemory.getCurrentEpisode()) {
-                        case "episode1":
+                        case "Episode 1":
                             SceneManager.LoadScene("episode2");
                             break;
-                        case "episode2":
+                        case "Episode 2":
                             SceneManager.LoadScene("episode3");
                             break;
-                        case "episode3":
+                        case "Episode 3":
                             SceneManager.LoadScene("levelSelection");
                             break;
                         default:
@@ -602,6 +602,16 @@ public class GameController : MonoBehaviour {
     float dist(float ax, float bx, float az, float bz)      // calculates the distance between two points
     {
         return Mathf.Sqrt(((ax - bx) * (ax - bx)) + ((az - bz) * (az - bz)));
+    }
+
+    public int countPlayers() {
+        int num = 0;
+        for (int i = 0; i < players.Count; i++) {
+            if (players[i] != null) {
+                num++;
+            }
+        }
+        return num;
     }
 
     bool checkPositionWithPlayers(float x, float z, float d) {

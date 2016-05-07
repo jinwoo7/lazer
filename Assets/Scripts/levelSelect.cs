@@ -10,8 +10,11 @@ public class levelSelect : MonoBehaviour {
     public Image episode2;
     public Image episode3;
     public Canvas lvlselection;
+    public AudioClip clickSound;
+    public AudioClip hoverSound;
 
     private memoryScript lvlMemory;
+    private AudioSource source;
 
     // Use this for initialization
     void Start () {
@@ -22,6 +25,8 @@ public class levelSelect : MonoBehaviour {
         episode3 = episode3.GetComponent<Image>();
         lvlselection = lvlselection.GetComponent<Canvas>();
         lvlselection.enabled = false;
+        source = GetComponent<AudioSource>();
+        source.clip = hoverSound;
     }
 
     public void lvl1Press() {
@@ -54,22 +59,36 @@ public class levelSelect : MonoBehaviour {
     }
 
     public void episode1Press() {
+        clicked();
         lvlMemory.setCurrentEpisode("episode1");
         episodeDisplay.text = "Episode 1";
         lvlselection.enabled = true;
     }
     public void episode2Press() {
+        clicked();
         lvlMemory.setCurrentEpisode("episode2");
         episodeDisplay.text = "Episode 2";
         lvlselection.enabled = true;
     }
     public void episode3Press() {
+        clicked();
         lvlMemory.setCurrentEpisode("episode3");
         episodeDisplay.text = "Episode 3";
         lvlselection.enabled = true;
     }
 
     public void backPress() {
+        clicked();
         lvlselection.enabled = false;
+    }
+
+    public void clicked() {
+        source.clip = clickSound;
+        source.PlayOneShot(clickSound);
+    }
+
+    public void onHover() {
+        source.clip = hoverSound;
+        source.PlayOneShot(hoverSound);
     }
 }
