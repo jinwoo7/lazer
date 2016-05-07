@@ -23,7 +23,6 @@ public class StartScreenLazers : MonoBehaviour {
             createFromBottom(Mathf.FloorToInt(Random.Range(0, 5 - 0.00001f)));
             createFromLeft(Mathf.FloorToInt(Random.Range(0, 5 - 0.00001f)));
             createFromRight(Mathf.FloorToInt(Random.Range(0, 5 - 0.00001f)));
-            Debug.Log("BAM!");
             timer = 0.0f;
         }
 	}

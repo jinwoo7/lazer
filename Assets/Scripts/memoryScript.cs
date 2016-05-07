@@ -11,9 +11,14 @@ public class memoryScript : MonoBehaviour {
     private int episode3Progress;
     private int currentLvl;
     private string currentEpisode;
+    /*
     private bool[] episode1levels = { false, false, false, false, false, false };
     private bool[] episode2levels = { false, false, false, false, false, false };
-    private bool[] episode3levels = { false, false, false, false, false, false };
+    private bool[] episode3levels = { false, false, false, false, false, false };*/
+
+    private bool[] episode1levels = { true, true, true, true, true, true};
+    private bool[] episode2levels = { true, true, true, true, true, true};
+    private bool[] episode3levels = { true, true, true, true, true, true };
 
     // Use this for initialization
     void Awake () {

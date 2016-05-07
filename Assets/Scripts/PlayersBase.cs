@@ -4,7 +4,9 @@ using System.Collections;
 public class PlayersBase : MonoBehaviour {
 
     public float speed;
-    public AudioSource itemSound;
+    public AudioClip pointSound;
+    public AudioClip speedSound;
+    public AudioSource soundManager;
     public GameObject explosion;
 
     protected GameController gameController;
@@ -20,6 +22,9 @@ public class PlayersBase : MonoBehaviour {
         uiController = mainController.GetComponent<UIController>();
         prm = mainController.GetComponent<pathRequestManager>();
         rb = GetComponent<Rigidbody>();
+        soundManager = GetComponent<AudioSource>();
+        soundManager.clip = pointSound;
+        soundManager.playOnAwake = false;
     }
 
     void OnTriggerEnter(Collider other)
@@ -27,7 +32,8 @@ public class PlayersBase : MonoBehaviour {
         if (other.gameObject.CompareTag("pickUp"))               // picking up items
         {
             gameController.moveItem();
-            itemSound.Play(0);                                  // playing item pickup sound
+            soundManager.clip = pointSound;                       // playing item pickup sound
+            soundManager.PlayOneShot(pointSound);
             gameController.handleScores(tag, "count");
             uiController.displayItemCount();
             if(gameController.getScores("player1") == gameController.getItemGoal()) {
@@ -36,13 +42,14 @@ public class PlayersBase : MonoBehaviour {
         }
 
         if (other.gameObject.CompareTag("speedItem")) {
-            itemSound.Play(0);                                  // playing item pickup sound
+            soundManager.clip = speedSound;                       // playing item special item sound
+            soundManager.PlayOneShot(speedSound);
             gameController.removeItem(true);
             if (tag == "player1") {
-                GetComponent<PlayerController>().speed += 1.0f;
+                GetComponent<PlayerController>().speed += 3.0f;
             }
             else {
-                GetComponent<AIPlayer>().speed += 0.1f;
+                GetComponent<AIPlayer>().speed += .5f;
             }
         }
 

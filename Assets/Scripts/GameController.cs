@@ -6,6 +6,7 @@ using System.Collections.Generic;           // for using list
 
 public class GameController : MonoBehaviour {
 
+    public Text objectiveText;
     public Canvas pauseScreen;
     public Canvas gameOverScreen;
     public Canvas succesScreen;
@@ -77,6 +78,7 @@ public class GameController : MonoBehaviour {
         playerMovement = false;
         levelSetup = true;
         isSepcialAvailable = false;
+        objectiveText.text = "";
 
         lvlMemory = GameObject.FindGameObjectWithTag("Memory").GetComponent<memoryScript>();
         manager = GetComponent<pathRequestManager>();
@@ -132,6 +134,7 @@ public class GameController : MonoBehaviour {
                     lazertimer = 0;
                     gameTimer = getTimeLimit();
                     succesScreen.enabled = true;
+                    playerMovement = false;
                     AIPathStop();
                     lvlMemory.setLevelProgression();
                     if (lvlMemory.getCurrentLvl() != 6)
@@ -291,70 +294,242 @@ public class GameController : MonoBehaviour {
     // ways to check item overlap
     void setupLevel() {
         bool specialItem = false;
-        if (lvlMemory.getCurrentLvl() == 1) {
-            maxRockNum = 40;
-            itemGoal = 1;   //3
-            setTimeLimit(30.0f); // 30 f
-            groupingMax = 5;
-            timeBetweenLasers = 4.0f;                   // duration between the lasers
-            warningTime = 3.0f;
-            numOfLasers = 5;                            // number of lasers to be fired at a time
-            specialItem = true;
-            Debug.Log("Loading Level 1");
+        if (lvlMemory.getCurrentEpisode() == "episode1") {
+            if (lvlMemory.getCurrentLvl() == 1) {
+                maxRockNum = 40;
+                itemGoal = 3;
+                setTimeLimit(30.0f); // 30 f
+                groupingMax = 5;
+                timeBetweenLasers = 4.0f;                   // duration between the lasers
+                warningTime = 3.0f;
+                numOfLasers = 5;                            // number of lasers to be fired at a time
+                objectiveText.text =
+                "- Collect 3 items in 30 seconds\n- Difficulty: Easy\n*Lazers are pretty slow";
+                Debug.Log("Loading Level 1");
+            }
+            else if (lvlMemory.getCurrentLvl() == 2) {
+                maxRockNum = 35;
+                itemGoal = 4;
+                groupingMax = 5;
+                setTimeLimit(30.0f);
+                timeBetweenLasers = 4.0f;                   // duration between the lasers
+                warningTime = 3.0f;
+                numOfLasers = 5;                            // number of lasers to be fired at a time
+                objectiveText.text =
+                "- Collect 4 items in 30 seconds\n- Difficulty: Easy\n*Lazers are pretty slow";
+                Debug.Log("Loading Level 2");
+            }
+            else if (lvlMemory.getCurrentLvl() == 3) {
+                maxRockNum = 35;
+                itemGoal = 7;
+                groupingMax = 4;
+                setTimeLimit(35.0f);
+                timeBetweenLasers = 3.0f;                   // duration between the lasers
+                warningTime = 3.0f;
+                numOfLasers = 6;                            // number of lasers to be fired at a time
+                specialItem = true;
+                objectiveText.text =
+                "- Collect 7 items in 35 seconds\n- Difficulty: Easy\n*Normal Lazer Speed\n*Look for the Speed Boost item!";
+                Debug.Log("Loading Level 3");
+            }
+            else if (lvlMemory.getCurrentLvl() == 4) {
+                maxRockNum = 30;
+                itemGoal = 8;
+                setTimeLimit(35.0f);
+                groupingMax = 4;
+                timeBetweenLasers = 3.0f;                   // duration between the lasers
+                warningTime = 3.0f;
+                numOfLasers = 7;                            // number of lasers to be fired at a time
+                specialItem = true;
+                objectiveText.text =
+                "- Collect 9 items in 35 seconds\n- Difficulty: Normal\n*Normal Lazer Speed\n*Look for the Speed Boost item!";
+                Debug.Log("Loading Level 4");
+            }
+            else if (lvlMemory.getCurrentLvl() == 5) {
+                maxRockNum = 25;
+                itemGoal = 9;
+                setTimeLimit(35.0f);
+                groupingMax = 3;
+                timeBetweenLasers = 3.0f;                   // duration between the lasers
+                warningTime = 3.0f;
+                numOfLasers = 8;                            // number of lasers to be fired at a time
+                objectiveText.text =
+                "- Collect 7 items in 35 seconds\n- Difficulty: Normal\n*Normal Lazer Speed";
+                Debug.Log("Loading Level 5");
+            }
+            else if (lvlMemory.getCurrentLvl() == 6) {
+                maxRockNum = 25;
+                itemGoal = 10;
+                setTimeLimit(40.0f);
+                groupingMax = 3;
+                timeBetweenLasers = 3.0f;                   // duration between the lasers
+                warningTime = 3.0f;
+                numOfLasers = 8;                            // number of lasers to be fired at a time
+                objectiveText.text =
+                "- Collect 7 items in 35 seconds\n- Difficulty: Normal\n*Normal Lazer Speed";
+                Debug.Log("Loading Level 6");
+            }
         }
-        else if (lvlMemory.getCurrentLvl() == 2) {
-            maxRockNum = 35;
-            itemGoal = 1;   //5
-            groupingMax = 5;
-            setTimeLimit(30.0f);
-            timeBetweenLasers = 4.0f;                   // duration between the lasers
-            warningTime = 3.0f;
-            numOfLasers = 5;                            // number of lasers to be fired at a time
-            Debug.Log("Loading Level 2");
+        else if (lvlMemory.getCurrentEpisode() == "episode2") {
+            if (lvlMemory.getCurrentLvl() == 1) {
+                maxRockNum = 30;
+                itemGoal = 7;
+                setTimeLimit(35.0f);
+                groupingMax = 4;
+                timeBetweenLasers = 3.0f;                   // duration between the lasers
+                warningTime = 3.0f;
+                numOfLasers = 8;                            // number of lasers to be fired at a time
+                specialItem = true;
+                objectiveText.text =
+                "- Collect 7 items in 35 seconds\n- Difficulty: Normal\n*Speed Boost Available\n*Normal Lazer Speed";
+                Debug.Log("Loading Level 1");
+            }
+            else if (lvlMemory.getCurrentLvl() == 2) {
+                maxRockNum = 25;
+                itemGoal = 7;
+                groupingMax = 3;
+                setTimeLimit(30.0f);
+                timeBetweenLasers = 3.0f;                   // duration between the lasers
+                warningTime = 3.0f;
+                numOfLasers = 8;                            // number of lasers to be fired at a time
+                specialItem = true;
+                objectiveText.text =
+                "- Collect 7 items in 30 seconds\n- Difficulty: Hard\n*Speed Boost Available\n*Normal Lazer Speed";
+                Debug.Log("Loading Level 2");
+            }
+            else if (lvlMemory.getCurrentLvl() == 3) {
+                maxRockNum = 20;
+                itemGoal = 5;
+                groupingMax = 3;
+                setTimeLimit(20.0f);
+                timeBetweenLasers = 3.0f;                   // duration between the lasers
+                warningTime = 3.0f;
+                numOfLasers = 7;                            // number of lasers to be fired at a time
+                objectiveText.text =
+                "- Collect 5 items in 20 seconds\n- Difficulty: Hard\n*Normal Lazer Speed";
+                Debug.Log("Loading Level 3");
+            }
+            else if (lvlMemory.getCurrentLvl() == 4) {
+                maxRockNum = 20;
+                itemGoal = 9;
+                setTimeLimit(35.0f);
+                groupingMax = 2;
+                timeBetweenLasers = 3.0f;                   // duration between the lasers
+                warningTime = 3.0f;
+                numOfLasers = 9;                            // number of lasers to be fired at a time
+                objectiveText.text =
+                "- Collect 9 items in 35 seconds\n- Difficulty: Hard\n*Normal Lazer Speed";
+                Debug.Log("Loading Level 4");
+            }
+            else if (lvlMemory.getCurrentLvl() == 5) {
+                maxRockNum = 25;
+                itemGoal = 6;
+                setTimeLimit(30.0f);
+                groupingMax = 2;
+                timeBetweenLasers = 3.0f;                   // duration between the lasers
+                warningTime = 2.0f;
+                numOfLasers = 7;                            // number of lasers to be fired at a time
+                specialItem = true;
+                objectiveText.text =
+                "- Collect 6 items in 30 seconds\n- Difficulty: Very Hard\n*Speed Boost Available\n*Lazers seems to be faster....";
+                Debug.Log("Loading Level 5");
+            }
+            else if (lvlMemory.getCurrentLvl() == 6) {
+                maxRockNum = 20;
+                itemGoal = 11;
+                setTimeLimit(50.0f);
+                groupingMax = 3;
+                timeBetweenLasers = 2.5f;                   // duration between the lasers
+                warningTime = 2.0f;
+                numOfLasers = 7;                            // number of lasers to be fired at a time
+                specialItem = true;
+                objectiveText.text =
+                "- Collect 11 items in 50 seconds\n- Difficulty: Very Hard\n*Speed Boost Available\n*Lazers are pretty fast... Watch out!";
+                Debug.Log("Loading Level 5");
+            }
         }
-        else if (lvlMemory.getCurrentLvl() == 3) {
-            maxRockNum = 30;
-            itemGoal = 1;   //7
-            groupingMax = 3;
-            setTimeLimit(35.0f);
-            timeBetweenLasers = 3.0f;                   // duration between the lasers
-            warningTime = 3.0f;
-            numOfLasers = 6;                            // number of lasers to be fired at a time
-            Debug.Log("Loading Level 3");
+        else if (lvlMemory.getCurrentEpisode() == "episode3") {
+            if (lvlMemory.getCurrentLvl() == 1) {
+                maxRockNum = 20;
+                itemGoal = 8;
+                setTimeLimit(40.0f);
+                groupingMax = 2;
+                timeBetweenLasers = 2.5f;                   // duration between the lasers
+                warningTime = 2.0f;
+                numOfLasers = 7;                            // number of lasers to be fired at a time
+                objectiveText.text =
+                "- Collect 8 items in 40 seconds\n- Difficulty: Very Hard\n*Fast Lazer Speed!";
+                Debug.Log("Loading Level 1");
+            }
+            else if (lvlMemory.getCurrentLvl() == 2) {
+                maxRockNum = 15;
+                itemGoal = 7;
+                groupingMax = 2;
+                setTimeLimit(30.0f);
+                timeBetweenLasers = 2.5f;                   // duration between the lasers
+                warningTime = 2.0f;
+                numOfLasers = 7;                            // number of lasers to be fired at a time
+                specialItem = true;
+                objectiveText.text =
+                "- Collect 7 items in 30 seconds\n- Difficulty: Very Hard\n*Speed Boost available\n*Fast Lazer Speed!";
+                Debug.Log("Loading Level 2");
+            }
+            else if (lvlMemory.getCurrentLvl() == 3) {
+                maxRockNum = 15;
+                itemGoal = 5;
+                groupingMax = 2;
+                setTimeLimit(30.0f);
+                timeBetweenLasers = 2.0f;                   // duration between the lasers
+                warningTime = 2.0f;
+                numOfLasers = 7;                            // number of lasers to be fired at a time
+                specialItem = true;
+                objectiveText.text =
+                "- Collect 5 items in 30 seconds\n- Difficulty: Very Hard\n*Speed Boost available\n*Lazers are even faster!";
+                Debug.Log("Loading Level 3");
+            }
+            else if (lvlMemory.getCurrentLvl() == 4) {
+                maxRockNum = 15;
+                itemGoal = 6;
+                setTimeLimit(35.0f);
+                groupingMax = 1;
+                timeBetweenLasers = 2.0f;                   // duration between the lasers
+                warningTime = 2.0f;
+                numOfLasers = 8;                            // number of lasers to be fired at a time
+                specialItem = true;
+                objectiveText.text =
+                "- Collect 6 items in 35 seconds\n- Difficulty: Very Hard\n*Speed Boost available\n*Very fast Lazers";
+                Debug.Log("Loading Level 4");
+            }
+            else if (lvlMemory.getCurrentLvl() == 5) {
+                maxRockNum = 15;
+                itemGoal = 6;
+                setTimeLimit(35.0f);
+                groupingMax = 1;
+                timeBetweenLasers = 2.0f;                   // duration between the lasers
+                warningTime = 1.5f;
+                numOfLasers = 7;                            // number of lasers to be fired at a time
+                specialItem = true;
+                objectiveText.text =
+                "- Collect 6 items in 35 seconds\n- Difficulty: INTENSE\n*Speed Boost available\n*Good luck........";
+                Debug.Log("Loading Level 5");
+            }
+            else if (lvlMemory.getCurrentLvl() == 6) {
+                maxRockNum = 10;
+                itemGoal = 8;
+                setTimeLimit(40.0f);
+                groupingMax = 1;
+                timeBetweenLasers = 1.5f;                   // duration between the lasers
+                warningTime = 1.5f;
+                numOfLasers = 8;                            // number of lasers to be fired at a time
+                specialItem = true;
+                objectiveText.text =
+                "- Collect 10 items in 35 seconds\n- Difficulty: INTENSE\n*Speed Boost available\n*So close! but soooooo far away";
+                Debug.Log("Loading Level 5");
+            }
         }
-        else if (lvlMemory.getCurrentLvl() == 4) {
-            maxRockNum = 30;
-            itemGoal = 1;  //9
-            setTimeLimit(40.0f);
-            groupingMax = 3;
-            timeBetweenLasers = 3.0f;                   // duration between the lasers
-            warningTime = 3.0f;
-            numOfLasers = 7;                            // number of lasers to be fired at a time
-            Debug.Log("Loading Level 4");
-        }
-        else if (lvlMemory.getCurrentLvl() == 5) {
-            maxRockNum = 15;
-            itemGoal = 1;   //7
-            setTimeLimit(30.0f);
-            groupingMax = 1;
-            timeBetweenLasers = 3.0f;                   // duration between the lasers
-            warningTime = 3.0f;
-            numOfLasers = 9;                            // number of lasers to be fired at a time
-            Debug.Log("Loading Level 5");
-        }
-        else if (lvlMemory.getCurrentLvl() == 6) {
-            maxRockNum = 15;
-            itemGoal = 1;   //8
-            setTimeLimit(40.0f);
-            groupingMax = 1;
-            timeBetweenLasers = 3.0f;                   // duration between the lasers
-            warningTime = 3.0f;
-            numOfLasers = 11;                            // number of lasers to be fired at a time
-            Debug.Log("Loading Level 6");
-        }
+
         specialItemTimeSet(specialItem);
         specialItemOnce = true;
-        Debug.Log("special item at: " + specialItemTime);
         gameTimer = getTimeLimit();
         resetAllScores();                            // resetting all item counter of all players
         uiController.displayItemCount();

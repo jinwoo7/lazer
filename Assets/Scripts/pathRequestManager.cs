@@ -29,42 +29,36 @@ public class pathRequestManager : MonoBehaviour {
     /* check to see if currently processing a path.
        if not, ask the pathfinding script to process the next one*/
     void TryProcessNext() {
-        int before = pathRequestQueue.Count;
-        Debug.Log("processing next! count = " + pathRequestQueue.Count);
-        Debug.Log("isporcessingPath = " + isProcessingPath);
-        try {
-            if (!isProcessingPath && pathRequestQueue.Count > 0) {   // if not processing and the queue is not empty
-            Debug.Log("Dequeuing!");
+        if (!isProcessingPath && pathRequestQueue.Count > 0) {   // if not processing and the queue is not empty
             currentPathRequest = pathRequestQueue.Dequeue();     // gets a request from the queue
             isProcessingPath = true;
             pathfinding.StartFindPath(currentPathRequest.pathStart, currentPathRequest.pathEnd);
-            }
-        }catch (Exception e) {
-            Debug.Log("ERROR: " + e + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            isProcessingPath = false;
         }
-        Debug.Log("processed! count = " + pathRequestQueue.Count);
-        int after = pathRequestQueue.Count;
-        int playerNum = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>().countPlayers();
-        if(before != 0 && after >= (playerNum-1)+before) {
-            Debug.Log("TRASHHHHHHHHHHHHHHHHHHHHH");
-            pathRequestQueue.Dequeue();
-        }
-        
     }
 
     // clears all queued commands
     public void clearQueue() {
-        Debug.Log("In clear Queue!");
         pathRequestQueue = new Queue<PathRequest>();
         isProcessingPath = false;
     }
 
     /* will be called by the pathfinding script once it finish finding the path*/
     public void FinishedProcessingPath(Vector3[] path, bool success) {
-        currentPathRequest.callback(path, success);
+        
         isProcessingPath = false;
-        TryProcessNext();
+        try {
+            currentPathRequest.callback(path, success);
+            instance.TryProcessNext();
+        }
+        catch (Exception e) {
+            Debug.Log("ERROR: " + e);
+            Debug.Log("GOT ITTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
+            if(pathRequestQueue.Count > 0) {
+                Debug.Log("UNCLOGGED!");
+                pathRequestQueue.Dequeue();
+                GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>().AIPathRequests();
+            }
+        }
     }
 
     struct PathRequest {

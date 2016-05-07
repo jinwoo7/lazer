@@ -11,12 +11,11 @@ public class Unit : MonoBehaviour {
     public bool moving;
     public float speedPercentage, lazyPercentage;
     GameController gameC;
-    float speed = 3f;
     Vector3[] path;
     int targetIndex;
 
     void Start() {
-        speedPercentage = Random.Range(0f, 6.5f);
+        speedPercentage = 10f;//Random.Range(0f, 6.5f);
         lazyPercentage = Random.Range(0f, 6.0f);
         goingForPoint = false;
         goingForSpeed = false;
@@ -80,7 +79,7 @@ public class Unit : MonoBehaviour {
                     currentWaypoint = path[targetIndex];    // set new way point
                 }
                 // moving our position move closer to currentWayPoint each frame;
-                transform.position = Vector3.MoveTowards(transform.position, currentWaypoint, speed * Time.deltaTime);
+                transform.position = Vector3.MoveTowards(transform.position, currentWaypoint, GetComponent<AIPlayer>().speed * Time.deltaTime);
                 yield return null;  // exit to move over to the next frame
             }
         }
