@@ -11,6 +11,10 @@ public class memoryScript : MonoBehaviour {
     private int episode3Progress;
     private int currentLvl;
     private string currentEpisode;
+    private bool[] episode1levels = { false, false, false, false, false, false };
+    private bool[] episode2levels = { false, false, false, false, false, false };
+    private bool[] episode3levels = { false, false, false, false, false, false };
+
     // Use this for initialization
     void Awake () {
         currentEpisode = "";
@@ -23,7 +27,19 @@ public class memoryScript : MonoBehaviour {
         currentLvl = 1;
         DontDestroyOnLoad(transform.gameObject);
     }
-	
+
+    public bool is1Complete() {
+        return episode1levels[5];
+    }
+
+    public bool is2Complete() {
+        return episode2levels[5];
+    }
+
+    public bool is3Complete() {
+        return episode3levels[5];
+    }
+
     // getters
     public int getEpisode1Points() {return episode1Points;}
 
@@ -40,6 +56,30 @@ public class memoryScript : MonoBehaviour {
     public int getCurrentLvl() { return currentLvl; }
 
     public string getCurrentEpisode() { return currentEpisode; }
+
+    public bool getEpisode1Levels(int x) {
+        if (x < 0 || x > 5)
+            return false;
+        else
+            return
+                episode1levels[x];
+    }
+
+    public bool getEpisode2Levels(int x) {
+        if (x < 0 || x > 5)
+            return false;
+        else
+            return
+                episode2levels[x];
+    }
+
+    public bool getEpisode3Levels(int x) {
+        if (x < 0 || x > 5)
+            return false;
+        else
+            return
+                episode3levels[x];
+    }
 
     // adder
     public void addEpisode1Points() { episode1Points++; }
@@ -65,5 +105,19 @@ public class memoryScript : MonoBehaviour {
 
     public void setCurrentEpisode(string x) {
         currentEpisode = x;
+    }
+
+    public void setLevelProgression() {
+        Debug.Log("current episode: " + currentEpisode);
+        Debug.Log("current level: " + (currentLvl-1) );
+        if (currentEpisode == "episode1")         // setting from episode1
+            episode1levels[currentLvl-1] = true;
+        else if (currentEpisode == "episode2")   // setting from episode2
+            episode2levels[currentLvl-1] = true;
+        else                                   // setting from episode3
+            episode3levels[currentLvl-1] = true;
+        Debug.Log("episode1: " + episode1levels);
+        Debug.Log("episode2: " + episode2levels);
+        Debug.Log("episode3: " + episode3levels);
     }
 }

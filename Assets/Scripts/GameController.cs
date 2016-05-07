@@ -133,6 +133,7 @@ public class GameController : MonoBehaviour {
                     gameTimer = getTimeLimit();
                     succesScreen.enabled = true;
                     AIPathStop();
+                    lvlMemory.setLevelProgression();
                     if (lvlMemory.getCurrentLvl() != 6)
                         setCurrentState(GameState.Success);
                     else
@@ -175,13 +176,15 @@ public class GameController : MonoBehaviour {
                     endScreen.enabled = false;
                     lvlMemory.setCurrentLvl(1);
                     switch (lvlMemory.getCurrentEpisode()) {
-                        case "Episode 1":
+                        case "episode1":
+                            lvlMemory.setCurrentEpisode("episode2");
                             SceneManager.LoadScene("episode2");
                             break;
-                        case "Episode 2":
+                        case "episode2":
+                            lvlMemory.setCurrentEpisode("episode3");
                             SceneManager.LoadScene("episode3");
                             break;
-                        case "Episode 3":
+                        case "episode3":
                             SceneManager.LoadScene("levelSelection");
                             break;
                         default:
@@ -290,7 +293,7 @@ public class GameController : MonoBehaviour {
         bool specialItem = false;
         if (lvlMemory.getCurrentLvl() == 1) {
             maxRockNum = 40;
-            itemGoal = 3;
+            itemGoal = 1;   //3
             setTimeLimit(30.0f); // 30 f
             groupingMax = 5;
             timeBetweenLasers = 4.0f;                   // duration between the lasers
@@ -301,7 +304,7 @@ public class GameController : MonoBehaviour {
         }
         else if (lvlMemory.getCurrentLvl() == 2) {
             maxRockNum = 35;
-            itemGoal = 6;
+            itemGoal = 1;   //5
             groupingMax = 5;
             setTimeLimit(30.0f);
             timeBetweenLasers = 4.0f;                   // duration between the lasers
@@ -311,7 +314,7 @@ public class GameController : MonoBehaviour {
         }
         else if (lvlMemory.getCurrentLvl() == 3) {
             maxRockNum = 30;
-            itemGoal = 8;
+            itemGoal = 1;   //7
             groupingMax = 3;
             setTimeLimit(35.0f);
             timeBetweenLasers = 3.0f;                   // duration between the lasers
@@ -321,7 +324,7 @@ public class GameController : MonoBehaviour {
         }
         else if (lvlMemory.getCurrentLvl() == 4) {
             maxRockNum = 30;
-            itemGoal = 10;
+            itemGoal = 1;  //9
             setTimeLimit(40.0f);
             groupingMax = 3;
             timeBetweenLasers = 3.0f;                   // duration between the lasers
@@ -331,7 +334,7 @@ public class GameController : MonoBehaviour {
         }
         else if (lvlMemory.getCurrentLvl() == 5) {
             maxRockNum = 15;
-            itemGoal = 7;
+            itemGoal = 1;   //7
             setTimeLimit(30.0f);
             groupingMax = 1;
             timeBetweenLasers = 3.0f;                   // duration between the lasers
@@ -341,7 +344,7 @@ public class GameController : MonoBehaviour {
         }
         else if (lvlMemory.getCurrentLvl() == 6) {
             maxRockNum = 15;
-            itemGoal = 8;
+            itemGoal = 1;   //8
             setTimeLimit(40.0f);
             groupingMax = 1;
             timeBetweenLasers = 3.0f;                   // duration between the lasers
